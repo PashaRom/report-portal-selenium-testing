@@ -1,0 +1,8 @@
+{
+  "allure": {
+    "directory": "allure-results",
+    "title": "ReportPortal Selenium Tests",
+    "links": [],
+    "labels": []
+  }
+}
