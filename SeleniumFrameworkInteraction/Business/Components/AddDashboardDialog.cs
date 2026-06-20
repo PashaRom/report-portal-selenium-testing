@@ -22,8 +22,14 @@ public class AddDashboardDialog : BaseComponent
 
     public bool IsOpen()
     {
-        try { return IsElementDisplayed(GlobalNameInput); }
-        catch { return false; }
+        try
+        {
+            return IsElementDisplayed(GlobalNameInput);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public bool IsClosed()
@@ -37,11 +43,20 @@ public class AddDashboardDialog : BaseComponent
                     var els = d.FindElements(GlobalNameInput);
                     return els.Count == 0 || !els[0].Displayed;
                 }
-                catch (StaleElementReferenceException) { return true; }
-                catch (NoSuchElementException)         { return true; }
+                catch (StaleElementReferenceException)
+                {
+                    return true;
+                }
+                catch (NoSuchElementException)
+                {
+                    return true;
+                }
             });
         }
-        catch { return true; }
+        catch
+        {
+            return true;
+        }
     }
 
     public void FillName(string name)
@@ -65,27 +80,51 @@ public class AddDashboardDialog : BaseComponent
 
     public bool IsNameFieldInError()
     {
-        try { return FindElements(NameError).Any(e => e.Displayed); }
-        catch { return false; }
+        try
+        {
+            return FindElements(NameError).Any(e => e.Displayed);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public bool IsShowConfigLinkVisible()
     {
-        try { return IsElementDisplayed(ShowConfigLink); }
-        catch { return false; }
+        try
+        {
+            return IsElementDisplayed(ShowConfigLink);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void ClickShowConfigLink() => FindElement(ShowConfigLink).Click();
 
     public bool IsConfigurationFieldVisible()
     {
-        try { return IsElementDisplayed(ConfigLabel); }
-        catch { return false; }
+        try
+        {
+            return IsElementDisplayed(ConfigLabel);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public bool IsConfigurationDescriptionVisible()
     {
-        try { return IsElementDisplayed(ConfigDesc); }
-        catch { return false; }
+        try
+        {
+            return IsElementDisplayed(ConfigDesc);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

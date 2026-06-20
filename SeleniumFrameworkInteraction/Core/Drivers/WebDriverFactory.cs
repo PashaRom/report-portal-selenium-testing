@@ -15,7 +15,9 @@ public static class WebDriverFactory
         settings ??= AppConfiguration.DriverSettings;
 
         if (settings.Browser == BrowserType.Remote)
+        {
             return CreateRemoteDriver(settings);
+        }
 
         return settings.Browser switch
         {
@@ -63,7 +65,9 @@ public static class WebDriverFactory
         }
         var driver = new FirefoxDriver(options);
         if (!settings.Headless)
+        {
             driver.Manage().Window.Size = new System.Drawing.Size(settings.WindowWidth, settings.WindowHeight);
+        }
         return driver;
     }
 
@@ -82,7 +86,9 @@ public static class WebDriverFactory
     private static IWebDriver CreateRemoteDriver(DriverSettings settings)
     {
         if (string.IsNullOrWhiteSpace(settings.RemoteUri))
+        {
             throw new InvalidOperationException("RemoteUri must be set in DriverSettings when using BrowserType.Remote.");
+        }
 
         var options = new ChromeOptions();
         options.AddArgument($"--window-size={settings.WindowWidth},{settings.WindowHeight}");

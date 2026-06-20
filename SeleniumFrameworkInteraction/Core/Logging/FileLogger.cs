@@ -16,8 +16,11 @@ public class FileLogger : ILogger
         _filePath = filePath;
 
         var dir = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(dir))
-            Directory.CreateDirectory(dir);
+        if (string.IsNullOrEmpty(dir))
+        {
+            return;
+        }
+        Directory.CreateDirectory(dir);
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
@@ -32,13 +35,17 @@ public class FileLogger : ILogger
         Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))
+        {
             return;
+        }
 
         var message = formatter(state, exception);
         var entry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{logLevel,-11}] [{_categoryName}] {message}";
 
         if (exception != null)
+        {
             entry += Environment.NewLine + exception;
+        }
 
         var fileLock = _fileLocks.GetOrAdd(_filePath, _ => new object());
         lock (fileLock)

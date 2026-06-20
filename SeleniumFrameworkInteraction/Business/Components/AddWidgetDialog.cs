@@ -66,14 +66,20 @@ public class AddWidgetDialog : BaseComponent
         for (var i = 0; i < 8; i++)
         {
             if (Driver.FindElements(WidgetNameInput).Any(e => e.Displayed))
+            {
                 return;
+            }
 
             var filterInputEls = Driver.FindElements(FilterInput);
             if (filterInputEls.Any(e => e.Displayed))
+            {
                 TrySelectFirstFilter();
+            }
 
             foreach (var locator in new[] { LaunchNameInput, Level1Input, Level1OverviewInput, AttributeKeyInput })
+            {
                 TryFillRandomText(locator);
+            }
 
             try
             {
@@ -92,7 +98,10 @@ public class AddWidgetDialog : BaseComponent
     private void TryFillRandomText(By locator)
     {
         var el = Driver.FindElements(locator).FirstOrDefault(e => e.Displayed);
-        if (el == null) return;
+        if (el == null)
+        {
+            return;
+        }
         el.Clear();
         el.SendKeys(Guid.NewGuid().ToString("N")[..8]);
     }
