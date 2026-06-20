@@ -19,7 +19,13 @@ public abstract class BaseComponent : BaseApplication
 
     protected override bool IsElementDisplayed(By locator)
     {
-        try { return Root.FindElement(locator).Displayed; }
-        catch (NoSuchElementException) { return false; }
+        try
+        {
+            return Root.FindElement(locator).Displayed;
+        }
+        catch (NoSuchElementException)
+        {
+            return false;
+        }
     }
 }

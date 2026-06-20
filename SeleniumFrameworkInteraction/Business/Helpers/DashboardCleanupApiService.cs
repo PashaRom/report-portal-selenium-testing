@@ -26,7 +26,9 @@ public class DashboardCleanupApiService
             cancellationToken);
 
         if (string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
+        {
             return;
+        }
 
         var dashboardsResponse = await _dashboardApiClient.GetDashboardsAsync(
             tokenResponse.AccessToken,

@@ -35,8 +35,14 @@ public abstract class BasePage : BaseApplication
 
     protected override bool IsElementDisplayed(By locator)
     {
-        try { return Driver.FindElement(locator).Displayed; }
-        catch (NoSuchElementException) { return false; }
+        try
+        {
+            return Driver.FindElement(locator).Displayed;
+        }
+        catch (NoSuchElementException)
+        {
+            return false;
+        }
     }
 
     protected IWebElement WaitUntilClickable(By locator)
@@ -47,6 +53,9 @@ public abstract class BasePage : BaseApplication
                 var el = d.FindElement(locator);
                 return el.Displayed && el.Enabled ? el : null;
             }
-            catch (StaleElementReferenceException) { return null; }
+            catch (StaleElementReferenceException)
+            {
+                return null;
+            }
         });
 }

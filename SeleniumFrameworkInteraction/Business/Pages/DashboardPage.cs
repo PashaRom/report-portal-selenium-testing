@@ -43,7 +43,10 @@ public class DashboardPage : BasePage
                 d.FindElements(By.XPath($"//*[contains(text(),'{widgetName}')]"))
                  .Any(e => e.Displayed));
         }
-        catch { return false; }
+        catch
+        {
+            return false;
+        }
     }
 
     public IReadOnlyList<string> CollectVisibleWidgetNames(IEnumerable<string> expectedNames)
@@ -53,10 +56,17 @@ public class DashboardPage : BasePage
         var found = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var name in names)
+        {
             if (Driver.FindElements(By.XPath($"//*[contains(text(),'{name}')]")).Any())
+            {
                 found.Add(name);
+            }
+        }
 
-        if (found.Count == names.Count) return found.ToList();
+        if (found.Count == names.Count)
+        {
+            return found.ToList();
+        }
 
         var container = js.ExecuteScript(@"
             var best = null, bestDiff = 100;
@@ -69,7 +79,10 @@ public class DashboardPage : BasePage
             return best;
         ") as IWebElement;
 
-        if (container == null) return found.ToList();
+        if (container == null)
+        {
+            return found.ToList();
+        }
 
         js.ExecuteScript("arguments[0].scrollTop = 0;", container);
         new WebDriverWait(Driver, TimeSpan.FromSeconds(5)).Until(_ =>
@@ -79,11 +92,18 @@ public class DashboardPage : BasePage
         while (true)
         {
             foreach (var name in names)
+            {
                 if (!found.Contains(name) &&
                     Driver.FindElements(By.XPath($"//*[contains(text(),'{name}')]")).Any())
+                {
                     found.Add(name);
+                }
+            }
 
-            if (found.Count == names.Count) break;
+            if (found.Count == names.Count)
+            {
+                break;
+            }
 
             js.ExecuteScript("arguments[0].scrollTop += 600;", container);
 
@@ -95,10 +115,15 @@ public class DashboardPage : BasePage
                 new WebDriverWait(Driver, TimeSpan.FromSeconds(3)).Until(d =>
                     d.FindElements(By.XPath(anyMissingXPath)).Any());
             }
-            catch (WebDriverTimeoutException) { }
+            catch (WebDriverTimeoutException)
+            {
+            }
 
             var scrollTop = Convert.ToInt64(js.ExecuteScript("return arguments[0].scrollTop;", container));
-            if (scrollTop == lastScrollTop) break;
+            if (scrollTop == lastScrollTop)
+            {
+                break;
+            }
             lastScrollTop = scrollTop;
         }
 
@@ -136,7 +161,10 @@ public class DashboardPage : BasePage
             var w = new WebDriverWait(Driver, TimeSpan.FromSeconds(5));
             return w.Until(d => d.FindElements(LockBtn).Any(e => e.Displayed));
         }
-        catch { return false; }
+        catch
+        {
+            return false;
+        }
     }
 
     public bool IsUnlockAvailable()
@@ -146,6 +174,9 @@ public class DashboardPage : BasePage
             var w = new WebDriverWait(Driver, TimeSpan.FromSeconds(5));
             return w.Until(d => d.FindElements(UnlockBtn).Any(e => e.Displayed));
         }
-        catch { return false; }
+        catch
+        {
+            return false;
+        }
     }
 }

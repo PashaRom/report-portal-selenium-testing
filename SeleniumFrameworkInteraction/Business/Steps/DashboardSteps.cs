@@ -37,7 +37,9 @@ public class DashboardSteps
         var match = System.Text.RegularExpressions.Regex.Match(
             DriverManager.Current.Url, @"dashboard/(\d+)");
         if (match.Success)
+        {
             _context.SetCreatedDashboard(name, long.Parse(match.Groups[1].Value));
+        }
     }
 
     public void NavigateToCreatedDashboard() =>
