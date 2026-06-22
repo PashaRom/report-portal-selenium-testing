@@ -1,27 +1,28 @@
+using Core.DI;
+using Core.Configuration;
 using Core.Drivers;
-using Core.Logging;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 
 namespace Core.Base;
 
+/// <summary>
+/// Base class for all Page Objects and Components.
+/// Provides shared access to WebDriver, Logger, and configuration via DI.
+/// </summary>
 public abstract class BaseApplication
 {
-    protected readonly IWebDriver Driver;
-    protected readonly ILogger Logger;
-    protected readonly WebDriverWait Wait;
+    protected int ExplicitWaitTimeoutSeconds { get; } =
+        ServiceLocator.GetService<IAppConfiguration>().ExplicitWaitTimeoutSeconds;
 
-    protected BaseApplication(int waitTimeoutSeconds)
+    protected IWebDriver Driver => DriverContext.Current;
+
+    protected IAppConfiguration Configuration => ServiceLocator.GetService<IAppConfiguration>();
+
+    protected ILogger Logger { get; }
+
+    protected BaseApplication()
     {
-        Driver = DriverManager.Current;
-        Logger = TestLoggerFactory.CreateLogger(GetType().Name);
-        Wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(waitTimeoutSeconds));
+        Logger = ServiceLocator.GetService<ILoggerFactory>().CreateLogger(GetType().Name);
     }
-
-    protected abstract IWebElement FindElement(By locator);
-
-    protected abstract IReadOnlyCollection<IWebElement> FindElements(By locator);
-
-    protected abstract bool IsElementDisplayed(By locator);
 }

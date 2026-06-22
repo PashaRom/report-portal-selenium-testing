@@ -1,16 +1,16 @@
-using Core.Drivers;
-using Core.Logging;
+using Core.Helpers;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 
 namespace Core.Base;
 
 public abstract class BasePage : BaseApplication
 {
-    protected BasePage(int waitTimeoutSeconds = 20)
-        : base(waitTimeoutSeconds)
+    protected string Name { get; }
+
+    protected BasePage(string name) : base()
     {
+        Name = name;
     }
 
     public string CurrentUrl => Driver.Url;
@@ -21,41 +21,10 @@ public abstract class BasePage : BaseApplication
 
     protected void NavigateAndWaitForReady(string url)
     {
-        Logger.LogInformation("Navigating to {Url}", url);
+        Logger.LogInformation("[{Page}] Navigating to {Url}", Name, url);
         Driver.Navigate().GoToUrl(url);
-        Wait.Until(d => ((IJavaScriptExecutor)d)
-            .ExecuteScript("return document.readyState")?.Equals("complete") == true);
+        WaitHelper.Until(d => ((IJavaScriptExecutor)d)
+            .ExecuteScript("return document.readyState")?.Equals("complete") == true,
+            timeout: TimeSpan.FromSeconds(ExplicitWaitTimeoutSeconds));
     }
-
-    protected override IWebElement FindElement(By locator)
-        => Wait.Until(d => d.FindElement(locator));
-
-    protected override IReadOnlyCollection<IWebElement> FindElements(By locator)
-        => Driver.FindElements(locator);
-
-    protected override bool IsElementDisplayed(By locator)
-    {
-        try
-        {
-            return Driver.FindElement(locator).Displayed;
-        }
-        catch (NoSuchElementException)
-        {
-            return false;
-        }
-    }
-
-    protected IWebElement WaitUntilClickable(By locator)
-        => Wait.Until(d =>
-        {
-            try
-            {
-                var el = d.FindElement(locator);
-                return el.Displayed && el.Enabled ? el : null;
-            }
-            catch (StaleElementReferenceException)
-            {
-                return null;
-            }
-        });
 }

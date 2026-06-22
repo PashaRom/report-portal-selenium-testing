@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\report-portal-testing\global\appsettings.json = ..\..\report-portal-testing\global\appsettings.json
+		..\..\report-portal-selenium-testing\global\appsettings.json = ..\..\report-portal-selenium-testing\global\appsettings.json
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Business", "Business\Business.csproj", "{22542C6C-149C-4834-90C5-E05D096210B4}"

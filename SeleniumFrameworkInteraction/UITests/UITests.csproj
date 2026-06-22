@@ -23,13 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\report-portal-testing\global\appsettings.json" Link="appsettings.json">
+    <None Include="..\..\global\appsettings.json" Link="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="Data\CSV\RP_USERS_CSV_Report.csv" Link="RP_USERS_CSV_Report.csv">
+    <Content Include="Data\CSV\RP_USERS_CSV_Report.csv" Link="Data\CSV\RP_USERS_CSV_Report.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Data\Templates\widget_types.en.json" Link="widget_types.en.json">
+    <Content Include="Data\Templates\widget_types.en.json" Link="Data\Templates\widget_types.en.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="allureConfig.json">

@@ -1,6 +1,7 @@
 using Allure.NUnit;
-using Allure.NUnit.Attributes;
+using Core.DI;
 using Core.Drivers;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace Core.Base;
@@ -9,15 +10,23 @@ namespace Core.Base;
 [AllureNUnit]
 public abstract class BaseTest
 {
+    protected ILogger Logger { get; }
+
+    protected BaseTest()
+    {
+        Logger = ServiceLocator.GetService<ILoggerFactory>().CreateLogger(GetType().Name);
+    }
+
     [SetUp]
     public void InitDriver()
     {
-        DriverManager.Set(WebDriverFactory.Create());
+        var driver = ServiceLocator.GetService<IWebDriverFactory>().Create();
+        ServiceLocator.GetService<IDriverManager>().Set(driver);
     }
 
     [TearDown]
     public void QuitDriver()
     {
-        DriverManager.Quit();
+        ServiceLocator.GetService<IDriverManager>().Quit();
     }
 }

@@ -8,62 +8,49 @@ using OpenQA.Selenium.Remote;
 
 namespace Core.Drivers;
 
-public static class WebDriverFactory
+public class WebDriverFactory : IWebDriverFactory
 {
-    public static IWebDriver Create(DriverSettings? settings = null)
-    {
-        settings ??= AppConfiguration.DriverSettings;
+    private readonly IAppConfiguration _configuration;
 
-        if (settings.Browser == BrowserType.Remote)
+    public WebDriverFactory(IAppConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public IWebDriver Create()
+    {
+        var driver = Create(_configuration.DriverSettings);
+        driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
+        return driver;
+    }
+
+    private static IWebDriver Create(DriverSettings settings)
+    {
+        if (settings.Remote && !string.IsNullOrWhiteSpace(settings.RemoteUri))
         {
-            return CreateRemoteDriver(settings);
+            return new RemoteWebDriver(new Uri(settings.RemoteUri), BuildOptions(settings, isRemote: true));
         }
 
         return settings.Browser switch
         {
-            BrowserType.Chrome  => CreateChromeDriver(settings),
+            BrowserType.Chrome => new ChromeDriver(BuildChromeOptions(settings)),
             BrowserType.Firefox => CreateFirefoxDriver(settings),
-            BrowserType.Edge    => CreateEdgeDriver(settings),
+            BrowserType.Edge => new EdgeDriver(BuildEdgeOptions(settings)),
             _ => throw new ArgumentOutOfRangeException(nameof(settings.Browser), settings.Browser, "Unsupported browser type.")
         };
     }
 
-    private static IWebDriver CreateChromeDriver(DriverSettings settings)
+    private static DriverOptions BuildOptions(DriverSettings settings, bool isRemote) => settings.Browser switch
     {
-        var options = new ChromeOptions();
-        options.AddArgument($"--window-size={settings.WindowWidth},{settings.WindowHeight}");
-        options.AddArgument("--disable-features=PasswordLeakDetection,PasswordManagerOnboarding,AutofillServerCommunication");
-        options.AddArgument("--disable-notifications");
-        options.AddArgument("--disable-save-password-bubble");
-        options.AddExcludedArgument("enable-automation");
-        options.AddArgument("--disable-password-manager-reauthentication");
-        options.AddArgument("--disable-password-generation-popup");
-        options.AddLocalStatePreference("credentials_enable_service", false);
-        options.AddLocalStatePreference("profile.password_manager_enabled", false);
-        options.AddUserProfilePreference("credentials_enable_service", false);
-        options.AddUserProfilePreference("profile.password_manager_enabled", false);
-        options.AddUserProfilePreference("profile.password_manager_leak_detection", false);
-        options.AddUserProfilePreference("autofill.profile_enabled", false);
-        options.AddUserProfilePreference("autofill.credit_card_enabled", false);
-        if (settings.Headless)
-        {
-            options.AddArgument("--headless=new");
-            options.AddArgument("--no-sandbox");
-            options.AddArgument("--disable-dev-shm-usage");
-        }
-        return new ChromeDriver(options);
-    }
+        BrowserType.Firefox => BuildFirefoxOptions(settings, isRemote),
+        BrowserType.Edge => BuildEdgeOptions(settings, isRemote),
+        _ => BuildChromeOptions(settings, isRemote)
+    };
 
+    // Firefox needs window size set after creation for non-headless local runs
     private static IWebDriver CreateFirefoxDriver(DriverSettings settings)
     {
-        var options = new FirefoxOptions();
-        if (settings.Headless)
-        {
-            options.AddArgument("--headless");
-            options.AddArgument($"--width={settings.WindowWidth}");
-            options.AddArgument($"--height={settings.WindowHeight}");
-        }
-        var driver = new FirefoxDriver(options);
+        var driver = new FirefoxDriver(BuildFirefoxOptions(settings));
         if (!settings.Headless)
         {
             driver.Manage().Window.Size = new System.Drawing.Size(settings.WindowWidth, settings.WindowHeight);
@@ -71,25 +58,8 @@ public static class WebDriverFactory
         return driver;
     }
 
-    private static IWebDriver CreateEdgeDriver(DriverSettings settings)
+    private static ChromeOptions BuildChromeOptions(DriverSettings settings, bool isRemote = false)
     {
-        var options = new EdgeOptions();
-        options.AddArgument($"--window-size={settings.WindowWidth},{settings.WindowHeight}");
-        if (settings.Headless)
-        {
-            options.AddArgument("--headless=new");
-            options.AddArgument("--no-sandbox");
-        }
-        return new EdgeDriver(options);
-    }
-
-    private static IWebDriver CreateRemoteDriver(DriverSettings settings)
-    {
-        if (string.IsNullOrWhiteSpace(settings.RemoteUri))
-        {
-            throw new InvalidOperationException("RemoteUri must be set in DriverSettings when using BrowserType.Remote.");
-        }
-
         var options = new ChromeOptions();
         options.AddArgument($"--window-size={settings.WindowWidth},{settings.WindowHeight}");
         options.AddArgument("--disable-features=PasswordLeakDetection,PasswordManagerOnboarding,AutofillServerCommunication");
@@ -105,12 +75,53 @@ public static class WebDriverFactory
         options.AddUserProfilePreference("profile.password_manager_leak_detection", false);
         options.AddUserProfilePreference("autofill.profile_enabled", false);
         options.AddUserProfilePreference("autofill.credit_card_enabled", false);
-        if (settings.Headless)
+        if (isRemote || settings.Headless)
         {
-            options.AddArgument("--headless=new");
             options.AddArgument("--no-sandbox");
             options.AddArgument("--disable-dev-shm-usage");
         }
-        return new RemoteWebDriver(new Uri(settings.RemoteUri), options);
+        if (isRemote)
+        {
+            options.AddArgument("--disable-gpu");
+        }
+        if (settings.Headless)
+        {
+            options.AddArgument("--headless=new");
+        }
+        return options;
+    }
+
+    private static FirefoxOptions BuildFirefoxOptions(DriverSettings settings, bool isRemote = false)
+    {
+        var options = new FirefoxOptions();
+        if (isRemote || settings.Headless)
+        {
+            options.AddArgument($"--width={settings.WindowWidth}");
+            options.AddArgument($"--height={settings.WindowHeight}");
+        }
+        if (settings.Headless)
+        {
+            options.AddArgument("--headless");
+        }
+        return options;
+    }
+
+    private static EdgeOptions BuildEdgeOptions(DriverSettings settings, bool isRemote = false)
+    {
+        var options = new EdgeOptions();
+        options.AddArgument($"--window-size={settings.WindowWidth},{settings.WindowHeight}");
+        if (isRemote || settings.Headless)
+        {
+            options.AddArgument("--no-sandbox");
+        }
+        if (isRemote)
+        {
+            options.AddArgument("--disable-dev-shm-usage");
+        }
+        if (settings.Headless)
+        {
+            options.AddArgument("--headless=new");
+        }
+        return options;
     }
 }

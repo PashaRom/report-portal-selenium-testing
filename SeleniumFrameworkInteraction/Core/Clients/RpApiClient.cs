@@ -12,12 +12,19 @@ public sealed class RpApiClient : IRpApiClient
 
     private static readonly HttpClient Http = new();
 
+    private readonly IAppConfiguration _configuration;
+
+    public RpApiClient(IAppConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
     public async Task<T> ExecuteAsync<T>(ApiRequest request, CancellationToken cancellationToken = default)
         where T : class, new()
     {
         using var requestMessage = new HttpRequestMessage(
             request.Method,
-            AppConfiguration.BaseUrl + request.RelativeUrl)
+            _configuration.BaseUrl + request.RelativeUrl)
         {
             Content = request.Content
         };

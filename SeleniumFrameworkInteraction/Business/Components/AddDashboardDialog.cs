@@ -1,4 +1,7 @@
 using Core.Base;
+using Core.Elements;
+using Core.Helpers;
+using Core.Structures;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 
@@ -6,25 +9,24 @@ namespace Business.Components;
 
 public class AddDashboardDialog : BaseComponent
 {
-    private static readonly By ModalRoot     = By.CssSelector("#modal-root [class*='modalLayout__modal-window']");
-    private static readonly By NameInput     = By.CssSelector("input[placeholder='Enter dashboard name']");
-    private static readonly By CancelBtn     = By.XPath(".//button[.='Cancel']");
-    private static readonly By AddBtn        = By.XPath(".//button[.='Add']");
-    private static readonly By NameError     = By.CssSelector("input[class*='error']");
-    private static readonly By ShowConfigLink = By.XPath(".//*[text()='Show dashboard configuration']");
-    private static readonly By ConfigLabel   = By.XPath(".//*[text()='Configuration']");
-    private static readonly By ConfigDesc    = By.XPath(".//*[contains(text(),'Paste from the clipboard')]");
+    public AddDashboardDialog() : base(
+        "Add Dashboard Dialog",
+        By.CssSelector("#modal-root [class*='modalLayout__modal-window']")) { }
 
-    private static readonly By GlobalNameInput =
-        By.CssSelector("#modal-root input[placeholder='Enter dashboard name']");
-
-    protected override IWebElement Root => Driver.FindElement(ModalRoot);
+    private Text NameInput        => new(By.CssSelector("input[placeholder='Enter dashboard name']"), "Dashboard Name Input", Root);
+    private Text GlobalNameInput  => new(By.CssSelector("input[placeholder='Enter dashboard name']"), "Global Dashboard Name Input", Root);
+    private Text NameErrorInput   => new(By.CssSelector("input[class*='error']"), "Name Error Input", Root);
+    private Label ConfigurationLabel => new(By.XPath(".//*[text()='Configuration']"), "Configuration Label", Root);
+    private Label ConfigurationDesc  => new(By.XPath(".//*[contains(text(),'Paste from the clipboard')]"), "Configuration Description", Root);
+    private Button CancelBtn      => new(By.XPath(".//button[.='Cancel']"), "Cancel Button", Root);
+    private Button AddBtn         => new(By.XPath(".//button[.='Add']"), "Add Button", Root);
+    private Link ShowConfigLink   => new(By.XPath(".//*[text()='Show dashboard configuration']"), "Show Configuration Link", Root);
 
     public bool IsOpen()
     {
         try
         {
-            return IsElementDisplayed(GlobalNameInput);
+            return WaitHelper.Until(_ => GlobalNameInput.IsDisplayed, timeout: Timeouts.Sec2);
         }
         catch
         {
@@ -36,22 +38,7 @@ public class AddDashboardDialog : BaseComponent
     {
         try
         {
-            return Wait.Until(d =>
-            {
-                try
-                {
-                    var els = d.FindElements(GlobalNameInput);
-                    return els.Count == 0 || !els[0].Displayed;
-                }
-                catch (StaleElementReferenceException)
-                {
-                    return true;
-                }
-                catch (NoSuchElementException)
-                {
-                    return true;
-                }
-            });
+            return WaitHelper.Until(_ => !GlobalNameInput.IsDisplayed, timeout: Timeouts.Sec2);
         }
         catch
         {
@@ -59,72 +46,27 @@ public class AddDashboardDialog : BaseComponent
         }
     }
 
-    public void FillName(string name)
-    {
-        var input = FindElement(NameInput);
-        input.Clear();
-        input.SendKeys(name);
-    }
+    public void FillName(string name) => NameInput.SetValue(name);
 
     public void ClickCancel()
     {
-        Logger.LogInformation("Clicking Cancel in Add Dashboard dialog");
-        FindElement(CancelBtn).Click();
+        Logger.LogInformation("[{Component}] Clicking Cancel", Name);
+        CancelBtn.Click();
     }
 
     public void ClickAdd()
     {
-        Logger.LogInformation("Clicking Add in Add Dashboard dialog");
-        FindElement(AddBtn).Click();
+        Logger.LogInformation("[{Component}] Clicking Add", Name);
+        AddBtn.Click();
     }
 
-    public bool IsNameFieldInError()
-    {
-        try
-        {
-            return FindElements(NameError).Any(e => e.Displayed);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public bool IsNameFieldInError() => NameErrorInput.IsDisplayed;
 
-    public bool IsShowConfigLinkVisible()
-    {
-        try
-        {
-            return IsElementDisplayed(ShowConfigLink);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public bool IsShowConfigLinkVisible() => ShowConfigLink.IsDisplayed;
 
-    public void ClickShowConfigLink() => FindElement(ShowConfigLink).Click();
+    public void ClickShowConfigLink() => ShowConfigLink.Click();
 
-    public bool IsConfigurationFieldVisible()
-    {
-        try
-        {
-            return IsElementDisplayed(ConfigLabel);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public bool IsConfigurationFieldVisible() => ConfigurationLabel.IsDisplayed;
 
-    public bool IsConfigurationDescriptionVisible()
-    {
-        try
-        {
-            return IsElementDisplayed(ConfigDesc);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public bool IsConfigurationDescriptionVisible() => ConfigurationDesc.IsDisplayed;
 }

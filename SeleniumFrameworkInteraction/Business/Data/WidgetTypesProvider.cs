@@ -1,10 +1,13 @@
 using Core.Configuration;
+using Core.DI;
 using Core.Helpers;
 
 namespace Business.Data;
 
 public static class WidgetTypesProvider
 {
+    private static IAppConfiguration Configuration => ServiceLocator.GetService<IAppConfiguration>();
+
     private static readonly Lazy<IReadOnlyDictionary<string, string>> _map = new(Load);
 
     /// <summary>
@@ -21,11 +24,11 @@ public static class WidgetTypesProvider
     public static string Label(string key) =>
         _map.Value.TryGetValue(key, out var label)
             ? label
-            : throw new KeyNotFoundException($"Widget key '{key}' not found in '{AppConfiguration.WidgetTypesFile}'.");
+            : throw new KeyNotFoundException($"Widget key '{key}' not found.");
 
     private static IReadOnlyDictionary<string, string> Load()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, AppConfiguration.WidgetTypesFile);
+        var path = Path.Combine(Configuration.TestDataDirectory, "Templates", "widget_types.en.json");
         return JsonReader.Read<IReadOnlyDictionary<string, string>>(path);
     }
 }

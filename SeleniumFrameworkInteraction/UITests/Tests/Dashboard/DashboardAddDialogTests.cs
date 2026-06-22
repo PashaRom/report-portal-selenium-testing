@@ -1,7 +1,7 @@
 using Allure.NUnit.Attributes;
 using Business.Steps;
-using NUnit.Framework;
 using Core.Base;
+using Core.DI;
 
 namespace UITests.Tests.Dashboard;
 
@@ -15,14 +15,14 @@ namespace UITests.Tests.Dashboard;
 [AllureSuite("Add Dashboard Dialog")]
 public class DashboardAddDialogTests : BaseTest
 {
-    private AuthSteps      _auth      = null!;
+    private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
 
     [SetUp]
     public void OpenDialog()
     {
-        _auth      = new AuthSteps();
-        _dashboard = new DashboardSteps();
+        _auth = ServiceLocator.GetService<AuthSteps>();
+        _dashboard = ServiceLocator.GetService<DashboardSteps>();
 
         _auth.LoginAs("default");
         _dashboard.OpenAddDialog();

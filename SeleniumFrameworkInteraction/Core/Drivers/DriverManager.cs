@@ -1,23 +1,33 @@
+using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 
 namespace Core.Drivers;
 
-public static class DriverManager
+public class DriverManager : IDriverManager
 {
-    private static readonly ThreadLocal<IWebDriver?> _driver = new();
+    private readonly ThreadLocal<IWebDriver?> _driver = new();
+    private readonly ILogger<DriverManager> _logger;
 
-    public static IWebDriver Current =>
+    public DriverManager(ILogger<DriverManager> logger)
+    {
+        _logger = logger;
+    }
+
+    public IWebDriver Current =>
         _driver.Value ?? throw new InvalidOperationException(
-            "WebDriver is not initialized for the current thread. Call DriverManager.Set() before accessing Current.");
+            "WebDriver is not initialized for the current thread. Call IDriverManager.Set() before accessing Current.");
 
-    public static bool IsInitialized => _driver.Value != null;
+    public bool IsInitialized => _driver.Value != null;
 
-    public static void Set(IWebDriver driver) => _driver.Value = driver;
+    public void Set(IWebDriver driver) => _driver.Value = driver;
 
-    public static void Quit()
+    public void Quit()
     {
         if (_driver.Value == null)
+        {
+            _logger.LogDebug("WebDriver is not initialized for the current thread, skipping Quit.");
             return;
+        }
 
         _driver.Value.Quit();
         _driver.Value = null;

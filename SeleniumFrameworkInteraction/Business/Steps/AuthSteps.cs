@@ -5,7 +5,12 @@ namespace Business.Steps;
 
 public class AuthSteps
 {
-    private readonly LoginPage _loginPage = new();
+    private readonly LoginPage _loginPage;
+
+    public AuthSteps(LoginPage loginPage)
+    {
+        _loginPage = loginPage;
+    }
 
     public void LoginAs(string loginAlias)
     {

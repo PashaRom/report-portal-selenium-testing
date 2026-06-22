@@ -1,8 +1,8 @@
 using Allure.NUnit.Attributes;
 using Business.Data;
 using Business.Steps;
-using NUnit.Framework;
 using Core.Base;
+using Core.DI;
 
 namespace UITests.Tests.Dashboard;
 
@@ -16,14 +16,14 @@ namespace UITests.Tests.Dashboard;
 [AllureSuite("CRUD")]
 public class DashboardCRUDTests : BaseTest
 {
-    private AuthSteps      _auth      = null!;
+    private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
 
     [SetUp]
     public void InitSteps()
     {
-        _auth      = new AuthSteps();
-        _dashboard = new DashboardSteps();
+        _auth = ServiceLocator.GetService<AuthSteps>();
+        _dashboard = ServiceLocator.GetService<DashboardSteps>();
     }
 
     [TestCaseSource(typeof(TestDataProvider), nameof(TestDataProvider.DashboardCrudCases))]

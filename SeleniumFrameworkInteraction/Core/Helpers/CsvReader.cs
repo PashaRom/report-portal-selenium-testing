@@ -14,7 +14,7 @@ public static class CsvReader
         }
 
         var headers = Tokenize(lines[0]);
-        var props   = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         var mapping = new Dictionary<int, PropertyInfo>();
         for (var i = 0; i < headers.Count; i++)
@@ -34,7 +34,7 @@ public static class CsvReader
                 continue;
             }
             var values = Tokenize(lines[row]);
-            var obj    = new T();
+            var obj = new T();
             foreach (var (col, prop) in mapping)
             {
                 if (col < values.Count)
@@ -53,15 +53,15 @@ public static class CsvReader
 
     private static List<string> Tokenize(string line)
     {
-        var tokens  = new List<string>();
+        var tokens = new List<string>();
         var current = new StringBuilder();
         var inQuote = false;
 
         foreach (var c in line)
         {
-            if      (c == '"')           inQuote = !inQuote;
+            if (c == '"') inQuote = !inQuote;
             else if (c == ',' && !inQuote) { tokens.Add(current.ToString()); current.Clear(); }
-            else                           current.Append(c);
+            else current.Append(c);
         }
         tokens.Add(current.ToString());
         return tokens;

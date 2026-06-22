@@ -7,20 +7,26 @@ namespace Business.Steps;
 public class DashboardSteps
 {
     private readonly DashboardScenarioContext _context = new();
-    private readonly DashboardListPage _listPage      = new();
-    private readonly DashboardPage     _dashboardPage = new();
+    private readonly DashboardListPage _listPage;
+    private readonly DashboardPage _dashboardPage;
+
+    public DashboardSteps(DashboardListPage listPage, DashboardPage dashboardPage)
+    {
+        _listPage = listPage;
+        _dashboardPage = dashboardPage;
+    }
 
     public bool HasCreatedDashboard => _context.HasCreatedDashboard;
-    public long CreatedDashboardId  => _context.CreatedDashboardId;
+    public long CreatedDashboardId => _context.CreatedDashboardId;
     public string CreatedDashboardName => _context.CreatedDashboardName;
 
     // ── Dialog ──────────────────────────────────────────────
 
     public AddDashboardDialog Dialog => _listPage.AddDashboardDialog;
 
-    public void OpenAddDialog()              => _listPage.OpenAddDialog();
-    public bool IsAddDialogOpen()            => _listPage.AddDashboardDialog.IsOpen();
-    public bool IsAddDialogClosed()          => _listPage.AddDashboardDialog.IsClosed();
+    public void OpenAddDialog() => _listPage.OpenAddDialog();
+    public bool IsAddDialogOpen() => _listPage.AddDashboardDialog.IsOpen();
+    public bool IsAddDialogClosed() => _listPage.AddDashboardDialog.IsClosed();
 
     // ── Dashboard lifecycle ──────────────────────────────────
 
@@ -35,7 +41,7 @@ public class DashboardSteps
         _context.SetCreatedDashboardName(name);
         _listPage.CreateDashboard(name);
         var match = System.Text.RegularExpressions.Regex.Match(
-            DriverManager.Current.Url, @"dashboard/(\d+)");
+            DriverContext.Current.Url, @"dashboard/(\d+)");
         if (match.Success)
         {
             _context.SetCreatedDashboard(name, long.Parse(match.Groups[1].Value));
@@ -62,8 +68,8 @@ public class DashboardSteps
 
     // ── Lock / Unlock ────────────────────────────────────────
 
-    public void LockDashboard()      => _dashboardPage.ClickLock();
-    public void UnlockDashboard()    => _dashboardPage.ClickUnlock();
-    public bool IsLockAvailable()    => _dashboardPage.IsLockAvailable();
-    public bool IsUnlockAvailable()  => _dashboardPage.IsUnlockAvailable();
+    public void LockDashboard() => _dashboardPage.ClickLock();
+    public void UnlockDashboard() => _dashboardPage.ClickUnlock();
+    public bool IsLockAvailable() => _dashboardPage.IsLockAvailable();
+    public bool IsUnlockAvailable() => _dashboardPage.IsUnlockAvailable();
 }

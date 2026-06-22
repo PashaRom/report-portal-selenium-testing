@@ -1,5 +1,6 @@
 using Business.Clients;
 using Business.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Business.Helpers;
 
@@ -7,11 +8,16 @@ public class DashboardCleanupApiService
 {
     private readonly IAuthClient _authClient;
     private readonly IDashboardApiClient _dashboardApiClient;
+    private readonly ILogger _logger;
 
-    public DashboardCleanupApiService(IAuthClient authClient, IDashboardApiClient dashboardApiClient)
+    public DashboardCleanupApiService(
+        IAuthClient authClient,
+        IDashboardApiClient dashboardApiClient,
+        ILoggerFactory loggerFactory)
     {
         _authClient = authClient;
         _dashboardApiClient = dashboardApiClient;
+        _logger = loggerFactory.CreateLogger<DashboardCleanupApiService>();
     }
 
     public async Task CleanupUserTestDashboardsAsync(
@@ -27,6 +33,7 @@ public class DashboardCleanupApiService
 
         if (string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
         {
+            _logger.LogWarning("Could not obtain access token for user '{Login}'. Skipping cleanup.", user.Login);
             return;
         }
 

@@ -1,36 +1,42 @@
-using Business.Components;
+﻿using Business.Components;
 using Core.Base;
-using Core.Configuration;
+using Core.Elements;
+using Core.Helpers;
+using Core.Structures;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
+using System.Text.RegularExpressions;
 
 namespace Business.Pages;
 
 public class DashboardPage : BasePage
 {
-    private static readonly By LockBtn         = By.XPath("//button[.='Lock']");
-    private static readonly By UnlockBtn       = By.XPath("//button[.='Unlock']");
-    private static readonly By AddWidgetBtn    = By.XPath("(//button[contains(.,'Add new widget')])[1]");
-    private static readonly By DeleteBtn       = By.XPath("//button[.='Delete']");
-    private static readonly By ModalRoot       = By.CssSelector("#modal-root");
-    private static readonly By ConfirmDeleteBtn = By.XPath(".//button[.='Delete']");
-    private static readonly By WizardModal     = By.CssSelector("[class*='widgetWizardModal']");
+    public DashboardPage(AddWidgetDialog addWidgetDialog, DeleteDashboardDialog deleteDashboardDialog) : base("Dashboard Page")
+    {
+        AddWidgetDialog = addWidgetDialog;
+        DeleteDashboardDialog = deleteDashboardDialog;
+    }
 
-    public AddWidgetDialog AddWidgetDialog { get; } = new();
+    private Button AddNewWidgetBtn => new(By.XPath("(//button[contains(.,'Add new widget')])[1]"), "Add New Widget Button");
+    private Button DeleteBtn => new(By.XPath("//button[.='Delete']"), "Delete Button");
+    private Button LockBtn => new(By.XPath("//button[.='Lock']"), "Lock Button");
+    private Button UnlockBtn => new(By.XPath("//button[.='Unlock']"), "Unlock Button");
+
+    public AddWidgetDialog AddWidgetDialog { get; }
+    public DeleteDashboardDialog DeleteDashboardDialog { get; }
 
     public void NavigateToDashboard(long dashboardId)
     {
-        var url = $"{AppConfiguration.BaseUrl}ui/#{AppConfiguration.ProjectName}/dashboard/{dashboardId}";
-        Logger.LogInformation("Navigating to dashboard {Id}", dashboardId);
+        var url = $"{Configuration.BaseUrl}ui/#{Configuration.ProjectName}/dashboard/{dashboardId}";
+        Logger.LogInformation("[{Page}] Navigating to dashboard {Id}", Name, dashboardId);
         NavigateAndWaitForReady(url);
     }
 
     public void AddWidget(string widgetType, string widgetName)
     {
-        Logger.LogInformation("Opening Add widget wizard for {Type}", widgetType);
-        WaitUntilClickable(AddWidgetBtn).Click();
-        Wait.Until(d => d.FindElements(WizardModal).Any(e => e.Displayed));
+        Logger.LogInformation("[{Page}] Opening Add widget wizard for {Type}", Name, widgetType);
+        AddNewWidgetBtn.Click();
+        AddWidgetDialog.WaitUntilVisible();
         AddWidgetDialog.Submit(widgetType, widgetName);
     }
 
@@ -38,20 +44,19 @@ public class DashboardPage : BasePage
     {
         try
         {
-            var longWait = new WebDriverWait(Driver, TimeSpan.FromSeconds(15));
-            return longWait.Until(d =>
+            return WaitHelper.Until(d =>
                 d.FindElements(By.XPath($"//*[contains(text(),'{widgetName}')]"))
-                 .Any(e => e.Displayed));
+                 .Any(e => e.Displayed), timeout: Timeouts.Sec1);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "[{Page}] Timeout waiting for widget '{WidgetName}' to appear", Name, widgetName);
             return false;
         }
     }
 
     public IReadOnlyList<string> CollectVisibleWidgetNames(IEnumerable<string> expectedNames)
     {
-        var js = (IJavaScriptExecutor)Driver;
         var names = expectedNames.ToList();
         var found = new HashSet<string>(StringComparer.Ordinal);
 
@@ -68,25 +73,15 @@ public class DashboardPage : BasePage
             return found.ToList();
         }
 
-        var container = js.ExecuteScript(@"
-            var best = null, bestDiff = 100;
-            Array.from(document.querySelectorAll('*')).forEach(function(el) {
-                var s = window.getComputedStyle(el);
-                if (s.overflowY !== 'auto' && s.overflowY !== 'scroll') return;
-                var diff = el.scrollHeight - el.clientHeight;
-                if (diff > bestDiff) { bestDiff = diff; best = el; }
-            });
-            return best;
-        ") as IWebElement;
+        var container = ActionHelper.JsFindScrollableContainer();
 
         if (container == null)
         {
             return found.ToList();
         }
 
-        js.ExecuteScript("arguments[0].scrollTop = 0;", container);
-        new WebDriverWait(Driver, TimeSpan.FromSeconds(5)).Until(_ =>
-            Convert.ToInt64(js.ExecuteScript("return arguments[0].scrollTop;", container)) == 0);
+        ActionHelper.JsScrollToTop(container);
+        WaitHelper.Until(_ => ActionHelper.JsGetScrollTop(container) == 0, timeout: Timeouts.Sec5);
 
         long lastScrollTop = -1;
         while (true)
@@ -105,21 +100,22 @@ public class DashboardPage : BasePage
                 break;
             }
 
-            js.ExecuteScript("arguments[0].scrollTop += 600;", container);
+            ActionHelper.JsScrollBy(container, 600);
 
             var missing = names.Where(n => !found.Contains(n)).ToList();
             var anyMissingXPath = "//*[" +
                 string.Join(" or ", missing.Select(n => $"contains(text(),'{n}')")) + "]";
             try
             {
-                new WebDriverWait(Driver, TimeSpan.FromSeconds(3)).Until(d =>
-                    d.FindElements(By.XPath(anyMissingXPath)).Any());
+                WaitHelper.Until(d =>
+                    d.FindElements(By.XPath(anyMissingXPath)).Any(), timeout: Timeouts.Sec3);
             }
             catch (WebDriverTimeoutException)
             {
+                Logger.LogDebug("[{Page}] No missing widgets appeared after scroll step, continuing", Name);
             }
 
-            var scrollTop = Convert.ToInt64(js.ExecuteScript("return arguments[0].scrollTop;", container));
+            var scrollTop = ActionHelper.JsGetScrollTop(container);
             if (scrollTop == lastScrollTop)
             {
                 break;
@@ -132,37 +128,33 @@ public class DashboardPage : BasePage
 
     public void DeleteDashboard()
     {
-        Logger.LogInformation("Deleting dashboard");
-        WaitUntilClickable(DeleteBtn).Click();
-        var modal = Wait.Until(d => d.FindElement(ModalRoot));
-        var confirmBtn = new WebDriverWait(Driver, TimeSpan.FromSeconds(5))
-            .Until(d => d.FindElement(ModalRoot).FindElements(ConfirmDeleteBtn)
-                         .FirstOrDefault(e => e.Displayed));
-        confirmBtn!.Click();
-        Wait.Until(d => !System.Text.RegularExpressions.Regex.IsMatch(d.Url, @"dashboard/\d+$"));
+        Logger.LogInformation("[{Page}] Deleting dashboard", Name);
+        DeleteBtn.ClickWithActions();
+        DeleteDashboardDialog.ClickDelete();
+        WaitHelper.Until(d => !Regex.IsMatch(d.Url, @"dashboard/\d+$"));
     }
 
     public void ClickLock()
     {
-        Logger.LogInformation("Clicking Lock button");
-        WaitUntilClickable(LockBtn).Click();
+        Logger.LogInformation("[{Page}] Clicking Lock button", Name);
+        LockBtn.Click();
     }
 
     public void ClickUnlock()
     {
-        Logger.LogInformation("Clicking Unlock button");
-        WaitUntilClickable(UnlockBtn).Click();
+        Logger.LogInformation("[{Page}] Clicking Unlock button", Name);
+        UnlockBtn.Click();
     }
 
     public bool IsLockAvailable()
     {
         try
         {
-            var w = new WebDriverWait(Driver, TimeSpan.FromSeconds(5));
-            return w.Until(d => d.FindElements(LockBtn).Any(e => e.Displayed));
+            return WaitHelper.Until(_ => LockBtn.IsDisplayed, timeout: Timeouts.Sec2);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "[{Page}] Lock button not found or not visible", Name);
             return false;
         }
     }
@@ -171,11 +163,11 @@ public class DashboardPage : BasePage
     {
         try
         {
-            var w = new WebDriverWait(Driver, TimeSpan.FromSeconds(5));
-            return w.Until(d => d.FindElements(UnlockBtn).Any(e => e.Displayed));
+            return WaitHelper.Until(_ => UnlockBtn.IsDisplayed, timeout: Timeouts.Sec2);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "[{Page}] Unlock button not found or not visible", Name);
             return false;
         }
     }

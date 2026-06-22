@@ -1,8 +1,9 @@
 using Allure.NUnit.Attributes;
 using Business.Data;
 using Business.Steps;
-using NUnit.Framework;
+using Microsoft.Extensions.Logging;
 using Core.Base;
+using Core.DI;
 
 namespace UITests.Tests.Dashboard;
 
@@ -16,27 +17,34 @@ namespace UITests.Tests.Dashboard;
 [AllureSuite("Widget Persistence")]
 public class DashboardCreateWithWidgetTests : BaseTest
 {
-    private AuthSteps      _auth      = null!;
+    private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
 
     [SetUp]
     public void InitSteps()
     {
-        _auth      = new AuthSteps();
-        _dashboard = new DashboardSteps();
+        _auth = ServiceLocator.GetService<AuthSteps>();
+        _dashboard = ServiceLocator.GetService<DashboardSteps>();
     }
 
     [TearDown]
     public void DeleteCreatedDashboard()
     {
-        if (!_dashboard.HasCreatedDashboard) return;
+        if (!_dashboard.HasCreatedDashboard)
+        {
+            Logger.LogWarning("No dashboard was created in this test, skipping cleanup");
+            return;
+        }
         try
         {
             _auth.LoginAs("default");
             _dashboard.NavigateToCreatedDashboard();
             _dashboard.DeleteDashboard();
         }
-        catch { /* cleanup best-effort */ }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Dashboard cleanup failed, skipping");
+        }
     }
 
     [TestCaseSource(typeof(TestDataProvider), nameof(TestDataProvider.LoginAliases))]

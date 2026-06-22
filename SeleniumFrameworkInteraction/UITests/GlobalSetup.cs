@@ -1,21 +1,27 @@
 using Business.Data;
-using Business.Clients;
+using Business.DI;
 using Business.Helpers;
 using Core.Configuration;
-using Core.Clients;
+using Core.DI;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 [SetUpFixture]
 public class GlobalSetup
 {
-    private static readonly Core.Clients.IRpApiClient RpApiClient = new RpApiClient();
-    private static readonly IAuthClient AuthClient = new AuthClient(RpApiClient);
-    private static readonly DashboardCleanupApiService DashboardCleanupApiService =
-        new(AuthClient, new DashboardApiClient(RpApiClient));
+    private IAppConfiguration? _appConfig;
+    private DashboardCleanupApiService? _cleanupService;
+    private ILogger? _logger;
 
     [OneTimeSetUp]
     public void PreCleanupTestDashboards()
     {
+        ServiceLocator.SetAdditionalRegistrations(services => services.AddBusinessServices());
+
+        _appConfig = ServiceLocator.GetService<IAppConfiguration>();
+        _cleanupService = ServiceLocator.GetService<DashboardCleanupApiService>();
+        _logger = ServiceLocator.GetService<ILoggerFactory>().CreateLogger(nameof(GlobalSetup));
+
         CleanupAsync().GetAwaiter().GetResult();
     }
 
@@ -25,20 +31,25 @@ public class GlobalSetup
         CleanupAsync().GetAwaiter().GetResult();
     }
 
-    private static async Task CleanupAsync()
+    private async Task CleanupAsync()
     {
-        var project = AppConfiguration.ProjectName;
+        if (_cleanupService is null || _appConfig is null || _logger is null)
+        {
+            return;
+        }
+
+        var project = _appConfig.ProjectName;
 
         foreach (var alias in TestDataProvider.LoginAliases)
         {
             var user = TestDataProvider.GetUser(alias);
             try
             {
-                await DashboardCleanupApiService.CleanupUserTestDashboardsAsync(user, project, IsTestDashboard);
+                await _cleanupService.CleanupUserTestDashboardsAsync(user, project, IsTestDashboard);
             }
-            catch
+            catch (Exception ex)
             {
-                // cleanup is best-effort; a failed user does not block others
+                _logger.LogWarning(ex, "Cleanup failed for user '{Alias}', skipping", alias);
             }
         }
     }
