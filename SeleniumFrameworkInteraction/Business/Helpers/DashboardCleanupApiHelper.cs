@@ -1,5 +1,5 @@
 using Business.Clients;
-using Business.Models;
+using Business.Model.DTO;
 using Microsoft.Extensions.Logging;
 
 namespace Business.Helpers;

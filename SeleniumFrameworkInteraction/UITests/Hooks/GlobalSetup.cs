@@ -4,13 +4,12 @@ using Business.Helpers;
 using Core.Configuration;
 using Core.DI;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
 
 [SetUpFixture]
 public class GlobalSetup
 {
     private IAppConfiguration? _appConfig;
-    private DashboardCleanupApiService? _cleanupService;
+    private DashboardCleanupApiHelper? _cleanupService;
     private ILogger? _logger;
 
     [OneTimeSetUp]
@@ -19,7 +18,7 @@ public class GlobalSetup
         ServiceLocator.SetAdditionalRegistrations(services => services.AddBusinessServices());
 
         _appConfig = ServiceLocator.GetService<IAppConfiguration>();
-        _cleanupService = ServiceLocator.GetService<DashboardCleanupApiService>();
+        _cleanupService = ServiceLocator.GetService<DashboardCleanupApiHelper>();
         _logger = ServiceLocator.GetService<ILoggerFactory>().CreateLogger(nameof(GlobalSetup));
 
         CleanupAsync().GetAwaiter().GetResult();
