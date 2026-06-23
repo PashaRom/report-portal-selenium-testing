@@ -2,7 +2,7 @@ using Business.Clients;
 using Business.Model.DTO;
 using Microsoft.Extensions.Logging;
 
-namespace Business.Helpers;
+namespace Business.Services;
 
 public class DashboardCleanupApiService
 {

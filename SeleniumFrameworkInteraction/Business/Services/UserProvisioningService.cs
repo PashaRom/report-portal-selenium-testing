@@ -5,7 +5,7 @@ using Business.Model.DTO;
 using Core.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Business.Helpers;
+namespace Business.Services;
 
 /// <summary>
 /// Ensures all test users from the CSV are present in ReportPortal before the test run.
