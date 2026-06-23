@@ -47,12 +47,12 @@ SeleniumFrameworkInteraction/
 │   ├── Logging/                   # FileLogger, FileLoggerProvider
 │   └── Structures/                # Timeouts (shared TimeSpan constants)
 ├── Business/                      # Application-specific layer
-│   ├── Clients/                   # IAuthClient, IDashboardApiClient and implementations
+│   ├── Clients/                   # IAuthClient, IDashboardApiClient, IUserApiClient and implementations
 │   ├── Components/                # Modal dialogs and reusable UI sections
 │   ├── Data/                      # TestDataProvider, WidgetTypesProvider
 │   ├── DI/                        # BusinessServiceExtensions (registers Business services)
-│   ├── Helpers/                   # DashboardCleanupApiService
-│   ├── Model/API/                 # API response POCOs (TokenResponse, DashboardListResponse, …)
+│   ├── Helpers/                   # DashboardCleanupApiService, UserProvisioningService
+│   ├── Model/API/                 # API request/response POCOs (TokenResponse, UserListResponse, CreateUserRq, …)
 │   ├── Models/                    # UI-facing POCOs (UserModel, …)
 │   ├── Pages/                     # Full-page Page Objects
 │   └── Steps/                     # Orchestration classes consumed by tests
@@ -284,7 +284,9 @@ Timeouts.Sec30  // 30 s
 | Core | `IRpApiClient` | Singleton |
 | Business | `IAuthClient` | Singleton |
 | Business | `IDashboardApiClient` | Singleton |
+| Business | `IUserApiClient` | Singleton |
 | Business | `DashboardCleanupApiService` | Singleton |
+| Business | `UserProvisioningService` | Singleton |
 | Business | `AddDashboardDialog`, `AddWidgetDialog`, `DeleteDashboardDialog` | Transient |
 | Business | `LoginPage`, `DashboardListPage`, `DashboardPage` | Transient |
 | Business | `AuthSteps`, `DashboardSteps` | Transient |
@@ -296,10 +298,10 @@ Core services are registered inside `ServiceLocator.BuildProvider()`. Business s
 ```csharp
 // GlobalSetup.cs
 [OneTimeSetUp]
-public void PreCleanupTestDashboards()
+public void OneTimeSetUp()
 {
     ServiceLocator.SetAdditionalRegistrations(services => services.AddBusinessServices());
-    // ... rest of setup
+    // ... provisioning + cleanup
 }
 ```
 
@@ -453,13 +455,32 @@ Current test suites:
 
 ### Global Setup & Cleanup
 
-`GlobalSetup.cs` runs once before and after the entire test run using NUnit's `[SetUpFixture]`:
+`GlobalSetup.cs` (`UITests/Hooks/`) runs once before and after the entire test run using NUnit's `[SetUpFixture]`. The `[OneTimeSetUp]` sequence is:
 
-1. **Registers Business-layer DI services** via `ServiceLocator.SetAdditionalRegistrations(services => services.AddBusinessServices())` — this is the first action in `OneTimeSetUp`, before any `GetService<>()` call.
-2. Connects to ReportPortal REST API using credentials from `appsettings.json`.
-3. Deletes all test-owned dashboards for every known user.
+1. **Registers Business-layer DI services** via `ServiceLocator.SetAdditionalRegistrations(services => services.AddBusinessServices())` — always the first action.
+2. **Provisions missing users** via `UserProvisioningService.EnsureUsersExistAsync()`:
+   - Fetches all existing users from ReportPortal (`GET /api/users/all`).
+   - For each user in the CSV that is absent: creates the account (`POST /api/users`) and assigns it to the configured project with the role from the CSV (`PUT /api/v1/project/{name}/assign`).
+   - Provisioning errors are logged as warnings and do not abort the test run.
+3. **Cleans up leftover test dashboards** for every known user via `DashboardCleanupApiService`.
 
-Test dashboards are identified by name: prefix `DC_` or suffix ` CRUD Dashboard`. This prevents leftover data from previous failed runs from affecting new ones.
+`[OneTimeTearDown]` repeats step 3 to clean up dashboards created during the run.
+
+Test dashboards are identified by name: prefix `DC_` or suffix ` CRUD Dashboard`.
+
+### User Provisioning
+
+`UserProvisioningService` (`Business/Helpers/`) ensures test users exist in ReportPortal before any test runs. It authenticates as `superadmin` (credentials from the CSV), compares the CSV user list against the live user list, and creates any missing users.
+
+**User API endpoints used:**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/users/all` | Fetch all existing users |
+| `POST` | `/api/users` | Create a new user account |
+| `PUT` | `/api/v1/project/{name}/assign` | Assign user to project with a role |
+
+**Project role resolution:** the role is parsed from the `ProjectsAndRoles` column in the CSV (e.g. `report_portal - PROJECT_MANAGER`). Falls back to `MEMBER` if the configured project is not listed for that user.
 
 ### Parallelism
 
