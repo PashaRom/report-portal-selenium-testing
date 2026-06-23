@@ -14,7 +14,9 @@ public static class BusinessServiceExtensions
         // API clients
         services.AddSingleton<IAuthClient, AuthClient>();
         services.AddSingleton<IDashboardApiClient, DashboardApiClient>();
+        services.AddSingleton<IUserApiClient, UserApiClient>();
         services.AddSingleton<DashboardCleanupApiService>();
+        services.AddSingleton<UserProvisioningService>();
 
         // Components — transient: new instance per resolution so each test gets a fresh state
         services.AddTransient<AddDashboardDialog>();
