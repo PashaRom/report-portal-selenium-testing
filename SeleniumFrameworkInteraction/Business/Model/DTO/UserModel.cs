@@ -1,4 +1,4 @@
-namespace Business.Models;
+namespace Business.Model.DTO;
 
 public class UserModel
 {

@@ -2,6 +2,7 @@ using Allure.NUnit.Attributes;
 using Business.Steps;
 using Core.Base;
 using Core.DI;
+using Core.Enum;
 
 namespace UITests.Tests.Dashboard;
 
@@ -9,7 +10,6 @@ namespace UITests.Tests.Dashboard;
 /// Feature: Dashboard Add New Dashboard Dialog
 /// Background: login as "default", open the Add New Dashboard dialog
 /// </summary>
-[TestFixture]
 [Category("dashboard_add_dialog")]
 [AllureFeature("Dashboard")]
 [AllureSuite("Add Dashboard Dialog")]
@@ -17,6 +17,8 @@ public class DashboardAddDialogTests : BaseTest
 {
     private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
+
+    public DashboardAddDialogTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void OpenDialog()

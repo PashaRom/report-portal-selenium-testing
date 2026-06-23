@@ -4,6 +4,7 @@ using Business.Steps;
 using Microsoft.Extensions.Logging;
 using Core.Base;
 using Core.DI;
+using Core.Enum;
 
 namespace UITests.Tests.Dashboard;
 
@@ -15,7 +16,6 @@ namespace UITests.Tests.Dashboard;
 /// MEMBER, OPERATOR, CUSTOMER → cannot.
 /// Permission is derived from each user's ProjectsAndRoles in the CSV.
 /// </summary>
-[TestFixture]
 [Category("dashboard_lock")]
 [AllureFeature("Dashboard")]
 [AllureSuite("Lock / Unlock")]
@@ -23,6 +23,8 @@ public class DashboardLockTests : BaseTest
 {
     private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
+
+    public DashboardLockTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void InitSteps()

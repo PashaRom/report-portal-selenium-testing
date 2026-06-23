@@ -4,6 +4,7 @@ using Business.Steps;
 using Microsoft.Extensions.Logging;
 using Core.Base;
 using Core.DI;
+using Core.Enum;
 
 namespace UITests.Tests.Dashboard;
 
@@ -11,7 +12,6 @@ namespace UITests.Tests.Dashboard;
 /// Feature: Dashboard All Widgets
 /// Background: login as "default", create dashboard with a unique name
 /// </summary>
-[TestFixture]
 [Category("dashboard_all_widgets")]
 [AllureFeature("Dashboard")]
 [AllureSuite("All Widgets")]
@@ -19,6 +19,8 @@ public class DashboardAllWidgetsTests : BaseTest
 {
     private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
+
+    public DashboardAllWidgetsTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void CreateDashboard()

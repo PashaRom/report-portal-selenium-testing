@@ -17,30 +17,31 @@ public class WebDriverFactory : IWebDriverFactory
         _configuration = configuration;
     }
 
-    public IWebDriver Create()
+    public IWebDriver Create(BrowserType browser)
     {
-        var driver = Create(_configuration.DriverSettings);
+        var settings = _configuration.DriverSettings;
+        var driver = CreateDriver(settings, browser);
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
         return driver;
     }
 
-    private static IWebDriver Create(DriverSettings settings)
+    private static IWebDriver CreateDriver(DriverSettings settings, BrowserType browser)
     {
         if (settings.Remote && !string.IsNullOrWhiteSpace(settings.RemoteUri))
         {
-            return new RemoteWebDriver(new Uri(settings.RemoteUri), BuildOptions(settings, isRemote: true));
+            return new RemoteWebDriver(new Uri(settings.RemoteUri), BuildOptions(settings, browser, isRemote: true));
         }
 
-        return settings.Browser switch
+        return browser switch
         {
             BrowserType.Chrome => new ChromeDriver(BuildChromeOptions(settings)),
             BrowserType.Firefox => CreateFirefoxDriver(settings),
             BrowserType.Edge => new EdgeDriver(BuildEdgeOptions(settings)),
-            _ => throw new ArgumentOutOfRangeException(nameof(settings.Browser), settings.Browser, "Unsupported browser type.")
+            _ => throw new ArgumentOutOfRangeException(nameof(browser), browser, "Unsupported browser type.")
         };
     }
 
-    private static DriverOptions BuildOptions(DriverSettings settings, bool isRemote) => settings.Browser switch
+    private static DriverOptions BuildOptions(DriverSettings settings, BrowserType browser, bool isRemote) => browser switch
     {
         BrowserType.Firefox => BuildFirefoxOptions(settings, isRemote),
         BrowserType.Edge => BuildEdgeOptions(settings, isRemote),

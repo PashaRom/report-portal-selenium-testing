@@ -1,3 +1,4 @@
+using Core.Enum;
 using Microsoft.Extensions.Configuration;
 
 namespace Core.Configuration;
@@ -12,7 +13,19 @@ public class AppConfiguration : IAppConfiguration
             .AddEnvironmentVariables()
             .Build();
 
-        DriverSettings = config.GetSection("DriverSettings").Get<DriverSettings>() ?? new DriverSettings();
+        var driverSettings = config.GetSection("DriverSettings").Get<DriverSettings>() ?? new DriverSettings();
+
+        // Support short-form: BROWSERS=Chrome,Firefox (overrides appsettings + DriverSettings__Browsers__)
+        var browsersEnv = Environment.GetEnvironmentVariable("BROWSERS");
+        if (!string.IsNullOrWhiteSpace(browsersEnv))
+        {
+            driverSettings.Browsers = browsersEnv
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(b => System.Enum.Parse<BrowserType>(b, ignoreCase: true))
+                .ToList();
+        }
+
+        DriverSettings = driverSettings;
         LogSettings = config.GetSection("LogSettings").Get<LogSettings>() ?? new LogSettings();
         BaseUrl = (config["BaseUrl"] ?? "http://localhost:8080/").TrimEnd('/') + '/';
         ProjectName = config["ProjectName"] ?? "superadmin_personal";

@@ -1,4 +1,4 @@
-using Business.Models;
+using Business.Model.DTO;
 using Core.Configuration;
 using Core.DI;
 using Core.Helpers;

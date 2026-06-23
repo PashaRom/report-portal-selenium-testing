@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 public class GlobalSetup
 {
     private IAppConfiguration? _appConfig;
-    private DashboardCleanupApiHelper? _cleanupService;
+    private DashboardCleanupApiService? _cleanupService;
     private ILogger? _logger;
 
     [OneTimeSetUp]
@@ -18,7 +18,7 @@ public class GlobalSetup
         ServiceLocator.SetAdditionalRegistrations(services => services.AddBusinessServices());
 
         _appConfig = ServiceLocator.GetService<IAppConfiguration>();
-        _cleanupService = ServiceLocator.GetService<DashboardCleanupApiHelper>();
+        _cleanupService = ServiceLocator.GetService<DashboardCleanupApiService>();
         _logger = ServiceLocator.GetService<ILoggerFactory>().CreateLogger(nameof(GlobalSetup));
 
         CleanupAsync().GetAwaiter().GetResult();

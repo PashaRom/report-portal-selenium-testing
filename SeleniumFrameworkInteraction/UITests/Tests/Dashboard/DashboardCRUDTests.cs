@@ -3,6 +3,7 @@ using Business.Data;
 using Business.Steps;
 using Core.Base;
 using Core.DI;
+using Core.Enum;
 
 namespace UITests.Tests.Dashboard;
 
@@ -10,7 +11,6 @@ namespace UITests.Tests.Dashboard;
 /// Feature: Dashboard CRUD
 /// Scenario Outline: User creates a dashboard with a widget then deletes it
 /// </summary>
-[TestFixture]
 [Category("dashboard_crud")]
 [AllureFeature("Dashboard")]
 [AllureSuite("CRUD")]
@@ -18,6 +18,8 @@ public class DashboardCRUDTests : BaseTest
 {
     private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
+
+    public DashboardCRUDTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void InitSteps()

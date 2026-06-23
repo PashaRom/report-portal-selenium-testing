@@ -36,7 +36,7 @@ A .NET 8 Selenium UI test framework targeting a [ReportPortal](https://reportpor
 ```
 SeleniumFrameworkInteraction/
 ├── Core/                          # Framework infrastructure
-│   ├── Base/                      # BaseApplication, BasePage, BaseComponent, BaseTest
+│   ├── Base/                      # BaseApplication, BasePage, BaseComponent, BaseTest, BrowserDataSource
 │   ├── Clients/                   # IRpApiClient, RpApiClient (HTTP client for ReportPortal)
 │   ├── Configuration/             # AppConfiguration, DriverSettings, IAppConfiguration
 │   ├── DI/                        # ServiceLocator (IoC composition root)
@@ -62,7 +62,8 @@ SeleniumFrameworkInteraction/
     ├── Data/
     │   ├── CSV/                   # User data exported from ReportPortal
     │   └── Templates/             # Widget name locale files (widget_types.en.json, …)
-    ├── GlobalSetup.cs             # One-time setup / teardown (registers DI + cleans test dashboards)
+    ├── Hooks/
+    │   └── GlobalSetup.cs         # One-time setup / teardown (registers DI + cleans test dashboards)
     ├── ParallelConfig.cs          # Assembly-level parallelism attributes
     └── allureConfig.json          # Allure results output path
 ```
@@ -116,8 +117,10 @@ All Page Objects and Components inherit from `BaseApplication`, which provides:
 - Exposes a `Root` property (`IWebElement`) that is found each call via the provided locator — no stale-element caching.
 - All element properties inside a component are scoped to `Root` via the `ISearchContext` constructor overload of element wrappers.
 
-**`BaseTest`** (NUnit `[TestFixture]` base):
-- `[SetUp] InitDriver()` — creates a new `IWebDriver` via `WebDriverFactory` and stores it in `DriverContext` (thread-local).
+**`BaseTest`** (NUnit cross-browser base):
+- Decorated with `[TestFixtureSource(typeof(BrowserDataSource), nameof(BrowserDataSource.Browsers))]` — NUnit automatically creates one fixture instance per configured browser.
+- Constructor accepts `BrowserType browser` — stored and passed to `WebDriverFactory.Create(browser)`.
+- `[SetUp] InitDriver()` — creates a new `IWebDriver` for the fixture's browser via `WebDriverFactory` and stores it in `DriverContext` (thread-local).
 - `[TearDown] QuitDriver()` — quits and disposes the driver after each test.
 - `ImplicitWait` is set to `TimeSpan.Zero` in `WebDriverFactory.Create()` — all waits are explicit.
 
@@ -182,12 +185,14 @@ Every action is logged automatically:
 
 | Setting | Values | Notes |
 |---------|--------|-------|
-| `Browser` | `Chrome`, `Firefox`, `Edge` | Default: `Chrome` |
+| `Browsers` | `["Chrome","Firefox","Edge"]` | List of browsers for cross-browser runs. Default: `["Chrome"]` |
 | `Remote` | `true` / `false` | When `true`, `RemoteUri` is required |
 | `RemoteUri` | URL string | Selenium Grid / cloud endpoint |
 | `Headless` | `true` / `false` | Default: `false` |
 | `WindowWidth` | int | Default: `1920` |
 | `WindowHeight` | int | Default: `1080` |
+
+`IWebDriverFactory.Create(BrowserType browser)` accepts the target browser explicitly, allowing `BaseTest` to create the correct driver instance for each fixture.
 
 Chrome is configured to suppress password manager prompts, save-password bubbles, and autofill to prevent UI interference during tests.
 
@@ -388,8 +393,9 @@ User data is loaded from a CSV file via `CsvReader` at first access (lazy, cache
 
 Located in `UITests/Tests/<Feature>/`. All fixtures inherit `BaseTest`.
 
+`BaseTest` is parameterised by `BrowserType` via `[TestFixtureSource]`, so each derived class automatically runs once per browser in the configured list. Every fixture must declare a matching constructor:
+
 ```csharp
-[TestFixture]
 [Category("dashboard_crud")]
 [AllureFeature("Dashboard")]
 [AllureSuite("CRUD")]
@@ -397,6 +403,8 @@ public class DashboardCRUDTests : BaseTest
 {
     private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
+
+    public DashboardCRUDTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void InitSteps()
@@ -479,7 +487,7 @@ Configuration is loaded from `appsettings.json` (can be overridden by environmen
   "WidgetTypesFile": "widget_types.en.json",
   "ExplicitWaitTimeoutSeconds": 10,
   "DriverSettings": {
-    "Browser": "Chrome",
+    "Browsers": ["Chrome"],
     "Remote": false,
     "RemoteUri": "",
     "Headless": false,
@@ -500,12 +508,12 @@ Configuration is loaded from `appsettings.json` (can be overridden by environmen
 | `UsersDataFile` | `RP_USERS_CSV_Report.csv` | CSV file with test user accounts |
 | `WidgetTypesFile` | `widget_types.en.json` | Widget display-name locale template |
 | `ExplicitWaitTimeoutSeconds` | `10` | Default timeout for explicit waits |
-| `DriverSettings.Browser` | `Chrome` | `Chrome`, `Firefox`, or `Edge` |
+| `DriverSettings.Browsers` | `["Chrome"]` | List of browsers — one fixture instance per entry. Default: `["Chrome"]` |
 | `DriverSettings.Remote` | `false` | Use Selenium Grid when `true` |
 | `DriverSettings.RemoteUri` | — | Grid / cloud endpoint URL |
 | `DriverSettings.Headless` | `false` | Run browser in headless mode |
 
-All settings can be overridden at runtime via environment variables using the standard .NET `IConfiguration` naming convention (e.g., `DriverSettings__Browser=Firefox`).
+All settings can be overridden at runtime via environment variables using the standard .NET `IConfiguration` naming convention (e.g., `DriverSettings__Headless=true`).
 
 ---
 
@@ -549,22 +557,41 @@ Available categories:
 
 ---
 
-### Choosing a browser
+### Cross-browser execution
 
-The browser is controlled by the `DriverSettings__Browser` environment variable.  
-Supported values: `Chrome` (default), `Firefox`, `Edge`.
+Each entry in `DriverSettings.Browsers` creates a separate fixture instance. NUnit runs all tests in that fixture once per browser.
 
-**Windows (PowerShell):**
+**Via `appsettings.json`:**
+```json
+"DriverSettings": {
+  "Browsers": ["Chrome", "Firefox"]
+}
+```
+
+**Via `BROWSERS` environment variable (short form, comma-separated):**
+
 ```powershell
-$env:DriverSettings__Browser = "Firefox"
+# Windows (PowerShell)
+$env:BROWSERS = "Chrome,Firefox"
 dotnet test SeleniumFrameworkInteraction.sln
 ```
 
-**Linux / macOS:**
 ```bash
-DriverSettings__Browser=Firefox dotnet test SeleniumFrameworkInteraction.sln
-DriverSettings__Browser=Edge    dotnet test SeleniumFrameworkInteraction.sln
+# Linux / macOS / CI
+BROWSERS=Chrome,Firefox dotnet test SeleniumFrameworkInteraction.sln
 ```
+
+**Via standard .NET array environment variables:**
+
+```powershell
+$env:DriverSettings__Browsers__0 = "Chrome"
+$env:DriverSettings__Browsers__1 = "Firefox"
+dotnet test SeleniumFrameworkInteraction.sln
+```
+
+**Priority** (highest wins): `BROWSERS` env var → `DriverSettings__Browsers__*` env vars → `appsettings.json Browsers` → default `Chrome`.
+
+> **Tip:** When running two browsers in parallel, set `LevelOfParallelism` to at least 2 so Chrome and Firefox fixture instances execute concurrently.
 
 ---
 
@@ -575,14 +602,14 @@ Use it in CI environments where no display is available.
 
 **Windows (PowerShell):**
 ```powershell
-$env:DriverSettings__Browser  = "Chrome"
+$env:BROWSERS                 = "Chrome"
 $env:DriverSettings__Headless = "true"
 dotnet test SeleniumFrameworkInteraction.sln
 ```
 
 **Linux / macOS:**
 ```bash
-DriverSettings__Headless=true dotnet test SeleniumFrameworkInteraction.sln
+BROWSERS=Chrome DriverSettings__Headless=true dotnet test SeleniumFrameworkInteraction.sln
 ```
 
 ---
@@ -659,7 +686,7 @@ dotnet test SeleniumFrameworkInteraction.sln
 ```bash
 BaseUrl=http://rp:8080/ \
 ProjectName=superadmin_personal \
-DriverSettings__Browser=Chrome \
+BROWSERS=Chrome,Firefox \
 DriverSettings__Headless=true \
 DriverSettings__Remote=true \
 DriverSettings__RemoteUri=http://grid:4444/wd/hub \
@@ -696,6 +723,7 @@ allure serve allure-results
 2. **Pages** — add a `<Screen>Page` class in `Business/Pages/` extending `BasePage("Page Name")`; inject its components via constructor; register as `services.AddTransient<MyPage>()`.
 3. **Components** — add a `<Name>Dialog` / `<Name>Panel` class in `Business/Components/` extending `BaseComponent("Component Name", By.CssSelector("…"))`; register as `services.AddTransient<MyComponent>()`.
 4. **Test fixture** — create a class in `UITests/Tests/<Feature>/` extending `BaseTest`:
+   - Add `public MyTests(BrowserType browser) : base(browser) { }` — required for `[TestFixtureSource]` parameterisation.
    - Add `[Category("…")]`, `[AllureFeature("…")]`, `[AllureSuite("…")]`.
    - Use `[TestCaseSource(typeof(TestDataProvider), nameof(…))]` for data-driven tests.
    - Resolve steps in `[SetUp]` via `ServiceLocator.GetService<MyFeatureSteps>()`.

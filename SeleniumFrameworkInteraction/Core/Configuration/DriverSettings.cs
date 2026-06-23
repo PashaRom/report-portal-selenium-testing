@@ -4,7 +4,13 @@ namespace Core.Configuration;
 
 public class DriverSettings
 {
-    public BrowserType Browser { get; set; } = BrowserType.Chrome;
+    /// <summary>
+    /// List of browsers to run tests against.
+    /// Each entry creates a separate fixture instance (cross-browser run).
+    /// Defaults to Chrome when not configured.
+    /// </summary>
+    public List<BrowserType> Browsers { get; set; } = new() { BrowserType.Chrome };
+
     public bool Remote { get; set; } = false;
     public string? RemoteUri { get; set; }
     public bool Headless { get; set; } = false;

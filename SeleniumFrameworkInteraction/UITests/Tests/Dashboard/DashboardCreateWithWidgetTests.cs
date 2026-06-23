@@ -4,6 +4,7 @@ using Business.Steps;
 using Microsoft.Extensions.Logging;
 using Core.Base;
 using Core.DI;
+using Core.Enum;
 
 namespace UITests.Tests.Dashboard;
 
@@ -11,7 +12,6 @@ namespace UITests.Tests.Dashboard;
 /// Feature: Dashboard Widget Persistence
 /// Scenario Outline: Dashboard widget persists after user re-logs in
 /// </summary>
-[TestFixture]
 [Category("dashboard_create")]
 [AllureFeature("Dashboard")]
 [AllureSuite("Widget Persistence")]
@@ -19,6 +19,8 @@ public class DashboardCreateWithWidgetTests : BaseTest
 {
     private AuthSteps _auth = null!;
     private DashboardSteps _dashboard = null!;
+
+    public DashboardCreateWithWidgetTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void InitSteps()
