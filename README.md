@@ -40,7 +40,7 @@ SeleniumFrameworkInteraction/
 │   ├── Clients/                   # IRpApiClient, RpApiClient (HTTP client for ReportPortal)
 │   ├── Configuration/             # AppConfiguration, DriverSettings, IAppConfiguration
 │   ├── DI/                        # ServiceLocator (IoC composition root)
-│   ├── Drivers/                   # WebDriverFactory, DriverManager, DriverContext
+│   ├── Drivers/                   # WebDriverFactory, DriverManager, IDriverManager
 │   ├── Elements/                  # Typed element wrappers (Button, Text, Label, Link, Radio)
 │   ├── Enum/                      # BrowserType and other enums
 │   ├── Helpers/                   # WaitHelper, ActionHelper, CsvReader, JsonReader
@@ -103,7 +103,7 @@ All Page Objects and Components inherit from `BaseApplication`, which provides:
 
 | Member | Description |
 |--------|-------------|
-| `Driver` | Current thread's `IWebDriver` via `DriverContext.Current` |
+| `Driver` | Current thread's `IWebDriver` via `ServiceLocator.GetService<IDriverManager>().Current` |
 | `Configuration` | `IAppConfiguration` instance from DI |
 | `Logger` | `ILogger` scoped to the concrete class name |
 | `ExplicitWaitTimeoutSeconds` | Value from `appsettings.json` |
@@ -120,7 +120,7 @@ All Page Objects and Components inherit from `BaseApplication`, which provides:
 **`BaseTest`** (NUnit cross-browser base):
 - Decorated with `[TestFixtureSource(typeof(BrowserDataSource), nameof(BrowserDataSource.Browsers))]` — NUnit automatically creates one fixture instance per configured browser.
 - Constructor accepts `BrowserType browser` — stored and passed to `WebDriverFactory.Create(browser)`.
-- `[SetUp] InitDriver()` — creates a new `IWebDriver` for the fixture's browser via `WebDriverFactory` and stores it in `DriverContext` (thread-local).
+- `[SetUp] InitDriver()` — creates a new `IWebDriver` for the fixture's browser via `WebDriverFactory` and stores it in `IDriverManager` (thread-local).
 - `[TearDown] QuitDriver()` — quits and disposes the driver after each test.
 - `ImplicitWait` is set to `TimeSpan.Zero` in `WebDriverFactory.Create()` — all waits are explicit.
 
@@ -196,7 +196,7 @@ Every action is logged automatically:
 
 Chrome is configured to suppress password manager prompts, save-password bubbles, and autofill to prevent UI interference during tests.
 
-`DriverContext` stores the driver in a thread-local slot (`ThreadLocal<IWebDriver?>`), making parallel test execution safe. `IDriverManager.Set(driver)` writes to this slot in `BaseTest.[SetUp]`; `DriverContext.Current` reads from it in pages and components.
+`IDriverManager` stores the driver in a thread-local slot (`ThreadLocal<IWebDriver?>`), making parallel test execution safe. `IDriverManager.Set(driver)` writes to this slot in `BaseTest.[SetUp]`; `IDriverManager.Current` is resolved via `ServiceLocator` in pages, components, and helpers — no static `DriverContext` class is needed.
 
 `ImplicitWait` is set to `TimeSpan.Zero` once in `WebDriverFactory.Create()` — the framework relies exclusively on explicit waits via `WaitHelper`.
 
@@ -491,7 +491,7 @@ Test dashboards are identified by name: prefix `DC_` or suffix ` CRUD Dashboard`
 [assembly: LevelOfParallelism(4)]
 ```
 
-Change `LevelOfParallelism` to match the number of available browser sessions / grid nodes. Each parallel fixture gets its own `WebDriver` instance via `DriverContext` (thread-local storage), so browser sessions never share state.
+Change `LevelOfParallelism` to match the number of available browser sessions / grid nodes. Each parallel fixture gets its own `WebDriver` instance via `IDriverManager` (thread-local storage), so browser sessions never share state.
 
 ---
 
