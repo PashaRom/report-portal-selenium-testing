@@ -35,9 +35,10 @@ public class AddWidgetDialog : BaseComponent
         ClickNextStep();
         HandleConfigSteps();
 
+        WaitHelper.Until(_ => WidgetNameInput.IsDisplayed, timeout: Timeouts.Sec10);
         WidgetNameInput.SetValue(widgetName);
         AddBtn.Click();
-        WaitHelper.Until(_ => !DialogRoot.IsDisplayed, timeout: Timeouts.Ms500);
+        WaitHelper.Until(_ => !DialogRoot.IsDisplayed, timeout: Timeouts.Sec5);
 
         Logger.LogInformation("[{Component}] Widget {WidgetName} added successfully", Name, widgetName);
     }
@@ -53,7 +54,7 @@ public class AddWidgetDialog : BaseComponent
 
     private void HandleConfigSteps()
     {
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < 15; i++)
         {
             if (WidgetNameInput.IsDisplayed)
             {
@@ -77,8 +78,10 @@ public class AddWidgetDialog : BaseComponent
             }
             catch (Exception ex)
             {
-                Logger.LogWarning(ex, "[{Component}] Next step button click failed — stopping config steps", Name);
-                return;
+                // Next Step button is gone — we may already be on the widget name step (still transitioning).
+                // Break and let the explicit wait in Submit() handle it.
+                Logger.LogWarning(ex, "[{Component}] Next step button click failed at iteration {Iteration} — stopping config steps", Name, i);
+                break;
             }
         }
     }
@@ -91,13 +94,21 @@ public class AddWidgetDialog : BaseComponent
             return;
         }
         input.SetValue(Guid.NewGuid().ToString("N")[..8]);
+        WaitHelper.Until(_ => !string.IsNullOrEmpty(input.Value), timeout: Timeouts.Sec2);
+        Root.Click();
     }
 
     private void TrySelectFirstFilter()
     {
         try
         {
-            FirstFilterRadio.Select();
+            // Radio buttons load asynchronously — give up to 10 seconds (Firefox/Edge remote may be slow)
+            WaitHelper.Until(_ => FirstFilterRadio.IsDisplayed, timeout: Timeouts.Sec10);
+
+            // Use JS click to reliably trigger React event handlers in all browsers (headless Firefox/Edge
+            // may not propagate a standard WebDriver click through the custom radio label to React).
+            var el = WaitHelper.DefaultWait(FirstFilterRadio);
+            ActionHelper.JsClick(el, FirstFilterRadio.Name);
         }
         catch
         {

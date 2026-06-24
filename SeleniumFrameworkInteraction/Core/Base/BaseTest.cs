@@ -1,12 +1,11 @@
-using Allure.Net.Commons;
 using Allure.NUnit;
 using Core.DI;
 using Core.Drivers;
 using Core.Enum;
+using Core.Utils;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
-using OpenQA.Selenium;
 
 namespace Core.Base;
 
@@ -36,27 +35,10 @@ public abstract class BaseTest
     {
         if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
         {
-            TryAttachScreenshot();
+            ScreenshotUtil.TryAttachScreenshot();
+            Logger.LogInformation("[BaseTest] Screenshot attached to Allure report");
         }
 
         ServiceLocator.GetService<IDriverManager>().Quit();
-    }
-
-    private void TryAttachScreenshot()
-    {
-        try
-        {
-            var driver = ServiceLocator.GetService<IDriverManager>().Current;
-            if (driver is ITakesScreenshot screenshotDriver)
-            {
-                var bytes = screenshotDriver.GetScreenshot().AsByteArray;
-                AllureApi.AddAttachment("Screenshot on Failure", "image/png", bytes, ".png");
-                Logger.LogInformation("[BaseTest] Screenshot attached to Allure report");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "[BaseTest] Could not take screenshot on test failure");
-        }
     }
 }

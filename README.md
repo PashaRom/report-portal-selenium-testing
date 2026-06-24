@@ -133,7 +133,7 @@ Located in `Core/Elements/`. Each wrapper encapsulates a locator or a pre-found 
 | Type | Description |
 |------|-------------|
 | `Button` | Clickable button; `Click()` waits until displayed + enabled; `ClickWithActions()` uses Selenium Actions for hover-then-click |
-| `Text` | Text input field; `SetValue(text)` clears and types |
+| `Text` | Text input field; `SetValue(text)` clears and types (waits up to 5 s for element); `Click()` also waits up to 5 s |
 | `Label` | Read-only text element; `Value` returns trimmed text |
 | `Link` | Anchor element; `Click()` waits until clickable |
 | `Radio` | Radio button; `Select()` checks the element |
@@ -176,6 +176,7 @@ Every action is logged automatically:
 `WrapperElement` base properties:
 - `IsDisplayed` — returns `false` on `StaleElementReferenceException` / `NoSuchElementException` instead of throwing.
 - `IsEnabled` — same safe guard.
+- `Element` — every access calls `ScreenshotUtil.TrackElement(el)`, recording the last-touched element for failure screenshots.
 
 ---
 
@@ -261,12 +262,26 @@ Timeouts.Sec30  // 30 s
 |--------|-------------|
 | `JsClick(element, name)` | `arguments[0].click()` via JS — bypasses z-index / overlay interception |
 | `JsClearBrowserStorage()` | Clears `localStorage` and `sessionStorage` |
+| `JsSetLocalStorageItem(key, value)` | Sets a single `localStorage` item for the current origin |
 | `JsFindScrollableContainer()` | Finds the largest scrollable container on the page |
 | `JsScrollToTop(container)` | Sets `scrollTop = 0` on a container |
 | `JsGetScrollTop(container)` | Returns `scrollTop` value |
 | `JsScrollBy(container, pixels)` | Increments `scrollTop` by given pixels |
 
 > **Tip:** Use `JsClick` for buttons inside modal dialogs that have a custom scrollbar overlay (e.g. `position: absolute; inset: 0; overflow: scroll`). Standard clicks and `Actions.Click()` are both blocked by overlay elements — only a JS click fires directly on the target DOM node.
+
+### ScreenshotUtil
+
+`ScreenshotUtil` (`Core/Utils/`) handles failure screenshots with element highlighting.
+
+- **`TrackElement(IWebElement)`** — called automatically by `WrapperElement.Element` on every element access; stores the reference in a `[ThreadStatic]` field (parallel-safe).
+- **`TryAttachScreenshot()`** — called by `BaseTest.[TearDown]` on test failure:
+  1. Highlights the last-tracked element with a red outline (`outline: 4px solid red`) via JavaScript.
+  2. Takes a screenshot.
+  3. Restores the original element style.
+  4. Attaches the screenshot to the Allure report as `"Screenshot on Failure"`.
+
+The red outline pinpoints exactly which element interaction preceded the failure, making root-cause analysis faster without inspecting logs.
 
 ---
 
@@ -287,7 +302,7 @@ Timeouts.Sec30  // 30 s
 | Business | `IUserApiClient` | Singleton |
 | Business | `DashboardCleanupApiService` | Singleton |
 | Business | `UserProvisioningService` | Singleton |
-| Business | `AddDashboardDialog`, `AddWidgetDialog`, `DeleteDashboardDialog` | Transient |
+| Business | `AddDashboardDialog`, `AddWidgetDialog`, `DeleteDashboardDialog`, `SystemAlertDialog` | Transient |
 | Business | `LoginPage`, `DashboardListPage`, `DashboardPage` | Transient |
 | Business | `AuthSteps`, `DashboardSteps` | Transient |
 
@@ -321,7 +336,7 @@ Steps, Pages, and Components all use **constructor injection** — dependencies 
 ```csharp
 // Steps receive Pages:
 public class AuthSteps(LoginPage loginPage) { … }
-public class DashboardSteps(DashboardListPage listPage, DashboardPage dashboardPage) { … }
+public class DashboardSteps(DashboardListPage listPage, DashboardPage dashboardPage, SystemAlertDialog systemAlertDialog) { … }
 
 // Pages receive Components:
 public class DashboardListPage(AddDashboardDialog dialog) : BasePage("Dashboard List Page") { … }
@@ -362,7 +377,8 @@ public class AddDashboardDialog : BaseComponent
 |-------|--------------|----------------|
 | `AddDashboardDialog` | `#modal-root [class*='modalLayout__modal-window']` | Create dashboard form |
 | `DeleteDashboardDialog` | `#modal-root` | Confirm dashboard deletion (uses `JsClick` to bypass scroll overlay) |
-| `AddWidgetDialog` | *(dialog root)* | Multi-step widget wizard |
+| `AddWidgetDialog` | *(dialog root)* | Multi-step widget wizard; handles filter, config, and name steps automatically |
+| `SystemAlertDialog` | *(alert root)* | System-level alert that may appear after widget operations; closed automatically by `DashboardSteps.AddWidget` |
 
 **Component rule:** Declare element properties with a relative locator (`.//button[.='Delete']`) and pass `Root` as the third constructor argument. This scopes `FindElement` to the component's DOM subtree.
 
@@ -372,10 +388,25 @@ Located in `Business/Steps/`. One class per feature, consumed exclusively by tes
 
 | Class | Responsibility |
 |-------|---------------|
-| `AuthSteps` | `LoginAs(alias)` — resolves user from `TestDataProvider`, logs in |
-| `DashboardSteps` | Full dashboard lifecycle: create, add widget, delete, lock/unlock |
+| `AuthSteps` | `LoginAs(alias)` — resolves user from `TestDataProvider`, logs in via UI; `LoginViaApi(alias)` — injects token into `localStorage` and refreshes (faster, used for test setup) |
+| `DashboardSteps` | Full dashboard lifecycle: create (waits up to 20 s for URL redirect), add widget (auto-closes `SystemAlertDialog`), delete, lock/unlock |
 
 Steps hold page / component instances and coordinate multi-page flows. Tests only call Steps methods — never pages directly.
+
+### API Login (`AuthSteps.LoginViaApi`)
+
+`LoginViaApi` bypasses the UI login form for speed. It:
+
+1. Calls `GET /uat/sso/oauth/token` with the user's credentials to obtain a JWT.
+2. Navigates to `BaseUrl + "ui/"` to establish the correct localStorage origin.
+3. Waits for the page to be on a real `http(s)://` URL (guards against Grid returning `chrome-error://` or `data:` pages under load).
+4. Sets `localStorage["token"]` to `{"type":"Bearer","value":"<JWT>"}`.
+5. Sets `localStorage["applicationSettings"]` to `{"shouldRequestOnboarding":false}`.
+6. Sets `localStorage["activityTimestamp"]` to the current Unix timestamp in milliseconds.
+7. Calls `driver.Navigate().Refresh()` to force React to re-initialise from the token.
+8. Waits up to 15 s for the URL to contain `/#` but not `login` (confirming successful authentication).
+
+> **Note:** If a test explicitly logs the user out (calls `AuthSteps.Logout()`), the subsequent login in `[TearDown]` uses `LoginViaApi` again. Only the first login per test uses this fast path; any re-login triggered by a test scenario uses `LoginAs` (UI form).
 
 ### Models & Data
 
@@ -434,8 +465,8 @@ public class DashboardCRUDTests : BaseTest
 
 Current test suites:
 
-| Class | Category | Description |
-|-------|----------|-------------|
+| Class | Responsibility |
+|-------|---------------|
 | `DashboardCRUDTests` | `dashboard_crud` | Create dashboard with widget, then delete |
 | `DashboardCreateWithWidgetTests` | `dashboard_widget` | Create dashboard and verify widget list |
 | `DashboardAllWidgetsTests` | `dashboard_all_widgets` | Add all widget types and verify visibility |
@@ -468,6 +499,8 @@ Current test suites:
 
 Test dashboards are identified by name: prefix `DC_` or suffix ` CRUD Dashboard`.
 
+**Screenshot on failure** — `BaseTest.[TearDown]` calls `ScreenshotUtil.TryAttachScreenshot()` when a test fails. The screenshot is attached to the Allure report and the last-accessed element is highlighted with a red outline so the failing interaction is immediately visible.
+
 ### User Provisioning
 
 `UserProvisioningService` (`Business/Helpers/`) ensures test users exist in ReportPortal before any test runs. It authenticates as `superadmin` (credentials from the CSV), compares the CSV user list against the live user list, and creates any missing users.
@@ -488,10 +521,12 @@ Test dashboards are identified by name: prefix `DC_` or suffix ` CRUD Dashboard`
 
 ```csharp
 [assembly: Parallelizable(ParallelScope.Fixtures)]
-[assembly: LevelOfParallelism(4)]
+[assembly: LevelOfParallelism(2)]
 ```
 
 Change `LevelOfParallelism` to match the number of available browser sessions / grid nodes. Each parallel fixture gets its own `WebDriver` instance via `IDriverManager` (thread-local storage), so browser sessions never share state.
+
+> **Recommended values:** `2` for local runs; scale up to match available Grid nodes for remote runs.
 
 ---
 
@@ -529,7 +564,7 @@ Configuration is loaded from `appsettings.json` (can be overridden by environmen
 | `UsersDataFile` | `RP_USERS_CSV_Report.csv` | CSV file with test user accounts |
 | `WidgetTypesFile` | `widget_types.en.json` | Widget display-name locale template |
 | `ExplicitWaitTimeoutSeconds` | `10` | Default timeout for explicit waits |
-| `DriverSettings.Browsers` | `["Chrome"]` | List of browsers — one fixture instance per entry. Default: `["Chrome"]` |
+| `DriverSettings.Browsers` | `["Chrome"]` | List of browsers — one fixture instance per entry. Default: `["Chrome"]`. If the list is empty or absent, falls back to `Chrome` |
 | `DriverSettings.Remote` | `false` | Use Selenium Grid when `true` |
 | `DriverSettings.RemoteUri` | — | Grid / cloud endpoint URL |
 | `DriverSettings.Headless` | `false` | Run browser in headless mode |

@@ -1,5 +1,6 @@
 using Core.DI;
 using Core.Drivers;
+using Core.Utils;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 
@@ -20,7 +21,15 @@ public abstract class WrapperElement : IWrapperElement, IWrapsElement
     public virtual IWebElement WrappedElement =>
         PreFoundElement ?? (_searchContext ?? (ISearchContext)Driver).FindElement(Locator!);
 
-    public IWebElement Element => WrappedElement;
+    public IWebElement Element
+    {
+        get
+        {
+            var el = WrappedElement;
+            ScreenshotUtil.TrackElement(el);
+            return el;
+        }
+    }
 
     public string Name { get; }
 

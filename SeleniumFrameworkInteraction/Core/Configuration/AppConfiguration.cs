@@ -25,6 +25,11 @@ public class AppConfiguration : IAppConfiguration
                 .ToList();
         }
 
+        if(!(driverSettings.Browsers.Count > 0))
+        {
+            driverSettings.Browsers = new List<BrowserType> { BrowserType.Chrome };
+        }
+
         DriverSettings = driverSettings;
         LogSettings = config.GetSection("LogSettings").Get<LogSettings>() ?? new LogSettings();
         BaseUrl = (config["BaseUrl"] ?? "http://localhost:8080/").TrimEnd('/') + '/';

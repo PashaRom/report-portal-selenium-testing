@@ -33,7 +33,7 @@ public class Text : WrapperElement
     public void SetValue(string value)
     {
         LogAction($"Setting value of Text element {Name}: '{value}'");
-        var element = WaitHelper.DefaultWait(this, timeout: Timeouts.Sec2);
+        var element = WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5);
         element.Clear();
         element.SendKeys(value);
         LogAction($"Set value of Text element {Name} successfully");
@@ -84,7 +84,7 @@ public class Text : WrapperElement
     public void Click()
     {
         LogAction($"Clicking on Text element {Name}");
-        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec2).Click();
+        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5).Click();
         LogAction($"Clicked on Text element {Name} successfully");
     }
 }

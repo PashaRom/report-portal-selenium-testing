@@ -52,10 +52,12 @@ public class AuthSteps
         // Navigate to the app origin so localStorage is accessible for this origin
         driver.Navigate().GoToUrl(_config.BaseUrl + "ui/");
 
-        // Wait for the SPA shell to settle (React initializes and may redirect to #login)
+        // Wait for the SPA shell to settle on a real HTTP(S) page — not a browser error/blank page.
+        // Under Grid load, GoToUrl can temporarily land on chrome-error:// or data: pages.
         WaitHelper.Until(
-            d => ((IJavaScriptExecutor)d).ExecuteScript("return document.readyState")?.Equals("complete") == true,
-            timeout: TimeSpan.FromSeconds(10),
+            d => (d.Url.StartsWith("http://") || d.Url.StartsWith("https://")) &&
+                 ((IJavaScriptExecutor)d).ExecuteScript("return document.readyState")?.Equals("complete") == true,
+            timeout: TimeSpan.FromSeconds(20),
             driver: driver);
 
         ActionHelper.JsClearBrowserStorage();
