@@ -2,9 +2,7 @@ using Business.Components;
 using Core.Base;
 using Core.Elements;
 using Core.Helpers;
-using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
-using System.Text.RegularExpressions;
 
 namespace Business.Pages;
 
@@ -32,15 +30,6 @@ public class DashboardListPage : BasePage
         Navigate();
         AddNewDashboardBtn.Click();
         WaitHelper.Until(d => AddDashboardDialog.IsOpen());
-    }
-
-    public void CreateDashboard(string name)
-    {
-        Logger.LogInformation("[{Page}] Creating dashboard: {DashboardName}", Name, name);
-        OpenAddDialog();
-        AddDashboardDialog.FillName(name);
-        AddDashboardDialog.ClickAdd();
-        WaitHelper.Until(d => Regex.IsMatch(d.Url, @"dashboard/\d+"));
     }
 
     public bool IsDashboardInList(string name)

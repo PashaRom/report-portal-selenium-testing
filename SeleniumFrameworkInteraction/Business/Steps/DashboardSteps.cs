@@ -2,6 +2,8 @@ using Business.Components;
 using Business.Pages;
 using Core.DI;
 using Core.Drivers;
+using Core.Helpers;
+using System.Text.RegularExpressions;
 
 namespace Business.Steps;
 
@@ -39,10 +41,14 @@ public class DashboardSteps
 
     public void CreateDashboardWithName(string name)
     {
+        var dasboardUrlPattern = @"dashboard/(\d+)";
         _context.SetCreatedDashboardName(name);
-        _listPage.CreateDashboard(name);
-        var match = System.Text.RegularExpressions.Regex.Match(
-            ServiceLocator.GetService<IDriverManager>().Current.Url, @"dashboard/(\d+)");
+        OpenAddDialog();
+        _listPage.AddDashboardDialog.FillName(name);
+        _listPage.AddDashboardDialog.ClickAdd();
+        WaitHelper.Until(d => Regex.IsMatch(d.Url, dasboardUrlPattern));
+        var match = Regex.Match(
+            ServiceLocator.GetService<IDriverManager>().Current.Url, dasboardUrlPattern);
         if (match.Success)
         {
             _context.SetCreatedDashboard(name, long.Parse(match.Groups[1].Value));
