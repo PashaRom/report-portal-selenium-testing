@@ -46,6 +46,7 @@ SeleniumFrameworkInteraction/
 │   ├── Helpers/                   # WaitHelper, ActionHelper, CsvReader, JsonReader
 │   ├── Logging/                   # FileLogger, FileLoggerProvider
 │   └── Structures/                # Timeouts (shared TimeSpan constants)
+|   |__ Utils                      # ScreenshotUtil
 ├── Business/                      # Application-specific layer
 │   ├── Clients/                   # IAuthClient, IDashboardApiClient, IUserApiClient and implementations
 │   ├── Components/                # Modal dialogs and reusable UI sections
