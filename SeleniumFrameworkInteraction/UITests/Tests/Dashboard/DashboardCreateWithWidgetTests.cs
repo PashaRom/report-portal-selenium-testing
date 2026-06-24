@@ -1,10 +1,8 @@
 using Allure.NUnit.Attributes;
 using Business.Data;
 using Business.Steps;
-using Microsoft.Extensions.Logging;
-using Core.Base;
-using Core.DI;
 using Core.Enum;
+using UITests.Hooks;
 
 namespace UITests.Tests.Dashboard;
 
@@ -15,39 +13,9 @@ namespace UITests.Tests.Dashboard;
 [Category("dashboard_create")]
 [AllureFeature("Dashboard")]
 [AllureSuite("Widget Persistence")]
-public class DashboardCreateWithWidgetTests : BaseTest
+public class DashboardCreateWithWidgetTests : DashboardTestBase
 {
-    private AuthSteps _auth = null!;
-    private DashboardSteps _dashboard = null!;
-
     public DashboardCreateWithWidgetTests(BrowserType browser) : base(browser) { }
-
-    [SetUp]
-    public void InitSteps()
-    {
-        _auth = ServiceLocator.GetService<AuthSteps>();
-        _dashboard = ServiceLocator.GetService<DashboardSteps>();
-    }
-
-    [TearDown]
-    public void DeleteCreatedDashboard()
-    {
-        if (!_dashboard.HasCreatedDashboard)
-        {
-            Logger.LogWarning("No dashboard was created in this test, skipping cleanup");
-            return;
-        }
-        try
-        {
-            _auth.LoginAs("default");
-            _dashboard.NavigateToCreatedDashboard();
-            _dashboard.DeleteDashboard();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Dashboard cleanup failed, skipping");
-        }
-    }
 
     [TestCaseSource(typeof(TestDataProvider), nameof(TestDataProvider.LoginAliases))]
     [Description("Widget persists on the dashboard after the user logs out and back in")]
@@ -55,7 +23,7 @@ public class DashboardCreateWithWidgetTests : BaseTest
     {
         const string widgetName = "Launch Stats Chart";
 
-        _auth.LoginAs(login);
+        _auth.LoginViaApi(login);
         _dashboard.CreateDashboardWithUniqueName();
         _dashboard.AddWidget("Launch statistics chart", widgetName);
 

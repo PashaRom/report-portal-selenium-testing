@@ -1,10 +1,8 @@
 using Allure.NUnit.Attributes;
 using Business.Data;
 using Business.Steps;
-using Microsoft.Extensions.Logging;
-using Core.Base;
-using Core.DI;
 using Core.Enum;
+using UITests.Hooks;
 
 namespace UITests.Tests.Dashboard;
 
@@ -19,39 +17,19 @@ namespace UITests.Tests.Dashboard;
 [Category("dashboard_lock")]
 [AllureFeature("Dashboard")]
 [AllureSuite("Lock / Unlock")]
-public class DashboardLockTests : BaseTest
+public class DashboardLockTests : DashboardTestBase
 {
-    private AuthSteps _auth = null!;
-    private DashboardSteps _dashboard = null!;
-
     public DashboardLockTests(BrowserType browser) : base(browser) { }
 
-    [SetUp]
-    public void InitSteps()
+    /// <summary>
+    /// Unlocks the dashboard before the base cleanup deletes it,
+    /// in case it was left in a locked state by the test.
+    /// </summary>
+    protected override void BeforeDelete()
     {
-        _auth = ServiceLocator.GetService<AuthSteps>();
-        _dashboard = ServiceLocator.GetService<DashboardSteps>();
-    }
-
-    [TearDown]
-    public void DeleteCreatedDashboard()
-    {
-        if (!_dashboard.HasCreatedDashboard)
+        if (_dashboard.IsUnlockAvailable())
         {
-            Logger.LogWarning("No dashboard was created in this test, skipping cleanup");
-            return;
-        }
-        try
-        {
-            _auth.LoginAs("default");
-            _dashboard.NavigateToCreatedDashboard();
-            if (_dashboard.IsUnlockAvailable())
-                _dashboard.UnlockDashboard();
-            _dashboard.DeleteDashboard();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Dashboard cleanup failed, skipping");
+            _dashboard.UnlockDashboard();
         }
     }
 
@@ -59,7 +37,7 @@ public class DashboardLockTests : BaseTest
     public void UnlockButton_Availability_ReflectsUserPermissions(string login, bool expectedAvailable)
     {
         // Setup: admin creates and locks the dashboard
-        _auth.LoginAs("default");
+        _auth.LoginViaApi("default");
         _dashboard.CreateDashboardWithUniqueName();
         _dashboard.LockDashboard();
         _auth.Logout();
@@ -76,7 +54,7 @@ public class DashboardLockTests : BaseTest
     public void LockButton_Availability_ReflectsUserPermissions(string login, bool expectedAvailable)
     {
         // Setup: admin creates an unlocked dashboard
-        _auth.LoginAs("default");
+        _auth.LoginViaApi("default");
         _dashboard.CreateDashboardWithUniqueName();
         _auth.Logout();
 
@@ -88,3 +66,4 @@ public class DashboardLockTests : BaseTest
             $"Lock button availability for role '{login}' should be {expectedAvailable}");
     }
 }
+

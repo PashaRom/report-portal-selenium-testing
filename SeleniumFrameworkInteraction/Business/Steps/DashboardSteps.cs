@@ -58,7 +58,11 @@ public class DashboardSteps
     public void NavigateToCreatedDashboard() =>
         _dashboardPage.NavigateToDashboard(_context.CreatedDashboardId);
 
-    public void DeleteDashboard() => _dashboardPage.DeleteDashboard();
+    public void DeleteDashboard()
+    {
+        _dashboardPage.DeleteDashboard();
+        _context.Reset();
+    }
 
     public bool IsDashboardInList(string name) => _listPage.IsDashboardInList(name);
 

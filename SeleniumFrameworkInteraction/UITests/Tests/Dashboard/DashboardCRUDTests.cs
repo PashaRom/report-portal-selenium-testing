@@ -1,9 +1,7 @@
 using Allure.NUnit.Attributes;
 using Business.Data;
-using Business.Steps;
-using Core.Base;
-using Core.DI;
 using Core.Enum;
+using UITests.Hooks;
 
 namespace UITests.Tests.Dashboard;
 
@@ -14,25 +12,15 @@ namespace UITests.Tests.Dashboard;
 [Category("dashboard_crud")]
 [AllureFeature("Dashboard")]
 [AllureSuite("CRUD")]
-public class DashboardCRUDTests : BaseTest
+public class DashboardCRUDTests : DashboardTestBase
 {
-    private AuthSteps _auth = null!;
-    private DashboardSteps _dashboard = null!;
-
     public DashboardCRUDTests(BrowserType browser) : base(browser) { }
-
-    [SetUp]
-    public void InitSteps()
-    {
-        _auth = ServiceLocator.GetService<AuthSteps>();
-        _dashboard = ServiceLocator.GetService<DashboardSteps>();
-    }
 
     [TestCaseSource(typeof(TestDataProvider), nameof(TestDataProvider.DashboardCrudCases))]
     [Description("User creates a named dashboard with a widget, then deletes the dashboard")]
     public void CreateDashboardWithWidget_ThenDelete(string login, string dashboardName, string widgetName)
     {
-        _auth.LoginAs(login);
+        _auth.LoginViaApi(login);
         _dashboard.CreateDashboardWithName(dashboardName);
         _dashboard.AddWidget("Launch statistics chart", widgetName);
 

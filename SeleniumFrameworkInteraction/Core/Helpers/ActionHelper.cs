@@ -90,6 +90,15 @@ public static class ActionHelper
     }
 
     /// <summary>
+    /// Sets a single localStorage item for the current origin.
+    /// </summary>
+    public static void JsSetLocalStorageItem(string key, string value)
+    {
+        Logger.LogInformation("[ActionHelper] Setting localStorage[{Key}]", key);
+        Js.ExecuteScript("localStorage.setItem(arguments[0], arguments[1]);", key, value);
+    }
+
+    /// <summary>
     /// Returns the best scrollable container element on the page (largest scrollable overflow area),
     /// or null if no scrollable container is found.
     /// </summary>

@@ -1,10 +1,8 @@
 using Allure.NUnit.Attributes;
 using Business.Data;
 using Business.Steps;
-using Microsoft.Extensions.Logging;
-using Core.Base;
-using Core.DI;
 using Core.Enum;
+using UITests.Hooks;
 
 namespace UITests.Tests.Dashboard;
 
@@ -15,40 +13,15 @@ namespace UITests.Tests.Dashboard;
 [Category("dashboard_all_widgets")]
 [AllureFeature("Dashboard")]
 [AllureSuite("All Widgets")]
-public class DashboardAllWidgetsTests : BaseTest
+public class DashboardAllWidgetsTests : DashboardTestBase
 {
-    private AuthSteps _auth = null!;
-    private DashboardSteps _dashboard = null!;
-
     public DashboardAllWidgetsTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void CreateDashboard()
     {
-        _auth = ServiceLocator.GetService<AuthSteps>();
-        _dashboard = ServiceLocator.GetService<DashboardSteps>();
-
-        _auth.LoginAs("default");
+        _auth.LoginViaApi("default");
         _dashboard.CreateDashboardWithUniqueName();
-    }
-
-    [TearDown]
-    public void DeleteCreatedDashboard()
-    {
-        if (!_dashboard.HasCreatedDashboard)
-        {
-            Logger.LogWarning("No dashboard was created in this test, skipping cleanup");
-            return;
-        }
-        try
-        {
-            _dashboard.NavigateToCreatedDashboard();
-            _dashboard.DeleteDashboard();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Dashboard cleanup failed, skipping");
-        }
     }
 
     [Test]

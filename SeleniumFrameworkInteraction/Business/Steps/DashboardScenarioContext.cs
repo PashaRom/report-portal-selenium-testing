@@ -17,4 +17,10 @@ public sealed class DashboardScenarioContext
     {
         CreatedDashboardName = name;
     }
+
+    public void Reset()
+    {
+        CreatedDashboardId = 0;
+        CreatedDashboardName = string.Empty;
+    }
 }

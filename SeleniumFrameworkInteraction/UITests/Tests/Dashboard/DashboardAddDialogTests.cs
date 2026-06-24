@@ -1,8 +1,8 @@
 using Allure.NUnit.Attributes;
 using Business.Steps;
-using Core.Base;
 using Core.DI;
 using Core.Enum;
+using UITests.Hooks;
 
 namespace UITests.Tests.Dashboard;
 
@@ -13,20 +13,14 @@ namespace UITests.Tests.Dashboard;
 [Category("dashboard_add_dialog")]
 [AllureFeature("Dashboard")]
 [AllureSuite("Add Dashboard Dialog")]
-public class DashboardAddDialogTests : BaseTest
+public class DashboardAddDialogTests : DashboardTestBase
 {
-    private AuthSteps _auth = null!;
-    private DashboardSteps _dashboard = null!;
-
     public DashboardAddDialogTests(BrowserType browser) : base(browser) { }
 
     [SetUp]
     public void OpenDialog()
     {
-        _auth = ServiceLocator.GetService<AuthSteps>();
-        _dashboard = ServiceLocator.GetService<DashboardSteps>();
-
-        _auth.LoginAs("default");
+        _auth.LoginViaApi("default");
         _dashboard.OpenAddDialog();
         Assume.That(_dashboard.IsAddDialogOpen(), Is.True,
             "Precondition: Add New Dashboard dialog must be open");
