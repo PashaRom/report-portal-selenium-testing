@@ -1,4 +1,3 @@
-using Core.Drivers;
 using Core.Helpers;
 using Core.Structures;
 using OpenQA.Selenium;
@@ -72,7 +71,7 @@ public class Radio : WrapperElement
         {
             try
             {
-                var label = DriverContext.Current.FindElement(By.XPath($"//label[@for='{Element.GetAttribute("id")}']"));
+                var label = Driver.FindElement(By.XPath($"//label[@for='{Element.GetAttribute("id")}']"));
                 LogAction($"Getting label text for Radio element {Name}");
                 return label.Text;
             }

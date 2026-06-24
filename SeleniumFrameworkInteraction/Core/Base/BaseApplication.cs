@@ -15,7 +15,7 @@ public abstract class BaseApplication
     protected int ExplicitWaitTimeoutSeconds { get; } =
         ServiceLocator.GetService<IAppConfiguration>().ExplicitWaitTimeoutSeconds;
 
-    protected IWebDriver Driver => DriverContext.Current;
+    protected IWebDriver Driver => ServiceLocator.GetService<IDriverManager>().Current;
 
     protected IAppConfiguration Configuration => ServiceLocator.GetService<IAppConfiguration>();
 

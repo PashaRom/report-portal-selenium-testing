@@ -1,5 +1,6 @@
 using Business.Components;
 using Business.Pages;
+using Core.DI;
 using Core.Drivers;
 
 namespace Business.Steps;
@@ -41,7 +42,7 @@ public class DashboardSteps
         _context.SetCreatedDashboardName(name);
         _listPage.CreateDashboard(name);
         var match = System.Text.RegularExpressions.Regex.Match(
-            DriverContext.Current.Url, @"dashboard/(\d+)");
+            ServiceLocator.GetService<IDriverManager>().Current.Url, @"dashboard/(\d+)");
         if (match.Success)
         {
             _context.SetCreatedDashboard(name, long.Parse(match.Groups[1].Value));

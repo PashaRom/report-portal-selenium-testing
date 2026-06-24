@@ -122,7 +122,7 @@ public static class WaitHelper
         IEnumerable<Type>? ignoredExceptions = null,
         IWebDriver? driver = null)
     {
-        var wait = new WebDriverWait(driver ?? DriverContext.Current, timeout)
+        var wait = new WebDriverWait(driver ?? ServiceLocator.GetService<IDriverManager>().Current, timeout)
         {
             PollingInterval = polling
         };

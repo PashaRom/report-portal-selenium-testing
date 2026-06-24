@@ -15,8 +15,10 @@ public abstract class WrapperElement : IWrapperElement, IWrapsElement
 
     private readonly ISearchContext? _searchContext;
 
+    protected IWebDriver Driver => ServiceLocator.GetService<IDriverManager>().Current;
+
     public virtual IWebElement WrappedElement =>
-        PreFoundElement ?? (_searchContext ?? (ISearchContext)DriverContext.Current).FindElement(Locator!);
+        PreFoundElement ?? (_searchContext ?? (ISearchContext)Driver).FindElement(Locator!);
 
     public IWebElement Element => WrappedElement;
 

@@ -1,5 +1,4 @@
 using Core.DI;
-using Core.Drivers;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
@@ -11,8 +10,11 @@ public static class ActionHelper
     private static ILogger Logger =>
         ServiceLocator.GetService<ILoggerFactory>().CreateLogger(nameof(ActionHelper));
 
+    private static IWebDriver CurrentDriver =>
+        ServiceLocator.GetService<Core.Drivers.IDriverManager>().Current;
+
     private static IJavaScriptExecutor Js =>
-        (IJavaScriptExecutor)DriverContext.Current;
+        (IJavaScriptExecutor)CurrentDriver;
 
     // ── Mouse Actions ────────────────────────────────────────────────────────
 
@@ -24,7 +26,7 @@ public static class ActionHelper
     {
         Logger.LogInformation("[ActionHelper] {Name}: moving to element and clicking via Actions", elementName);
 
-        new Actions(DriverContext.Current)
+        new Actions(CurrentDriver)
             .MoveToElement(element)
             .Click()
             .Perform();
@@ -39,7 +41,7 @@ public static class ActionHelper
     {
         Logger.LogInformation("[ActionHelper] DragAndDrop: '{Source}' → '{Target}'", sourceName, targetName);
 
-        new Actions(DriverContext.Current)
+        new Actions(CurrentDriver)
             .DragAndDrop(source, target)
             .Perform();
 
@@ -55,7 +57,7 @@ public static class ActionHelper
             "[ActionHelper] DragAndDropByOffset: '{Source}' by ({X}px, {Y}px)",
             sourceName, offsetX, offsetY);
 
-        new Actions(DriverContext.Current)
+        new Actions(CurrentDriver)
             .DragAndDropToOffset(source, offsetX, offsetY)
             .Perform();
 
