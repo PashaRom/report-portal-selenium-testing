@@ -8,17 +8,15 @@ using Core.DI;
 using Core.Helpers;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
+using Core.Base;
 
 namespace Business.Steps;
 
-public class AuthSteps
+public class AuthSteps : BaseSteps
 {
     private readonly LoginPage _loginPage;
     private readonly IAuthClient _authClient;
     private readonly IAppConfiguration _config;
-
-    private ILogger Logger =>
-        ServiceLocator.GetService<ILoggerFactory>().CreateLogger(nameof(AuthSteps));
 
     public AuthSteps(LoginPage loginPage, IAuthClient authClient, IAppConfiguration config)
     {

@@ -1,6 +1,8 @@
 ﻿using Business.Components;
+using Business.Locators;
 using Core.Base;
 using Core.Elements;
+using Core.Enum;
 using Core.Helpers;
 using Core.Structures;
 using Microsoft.Extensions.Logging;
@@ -11,10 +13,11 @@ namespace Business.Pages;
 
 public class DashboardPage : BasePage
 {
-    public DashboardPage(AddWidgetDialog addWidgetDialog, DeleteDashboardDialog deleteDashboardDialog) : base("Dashboard Page")
+    public DashboardPage(AddWidgetDialog addWidgetDialog, DeleteDashboardDialog deleteDashboardDialog, WidgetComponent widgetComponent) : base("Dashboard Page")
     {
         AddWidgetDialog = addWidgetDialog;
         DeleteDashboardDialog = deleteDashboardDialog;
+        WidgetComponent = widgetComponent;
     }
 
     private Button AddNewWidgetBtn => new(By.XPath("(//button[contains(.,'Add new widget')])[1]"), "Add New Widget Button");
@@ -25,6 +28,8 @@ public class DashboardPage : BasePage
     public AddWidgetDialog AddWidgetDialog { get; }
     public DeleteDashboardDialog DeleteDashboardDialog { get; }
 
+    public WidgetComponent WidgetComponent { get; }
+
     public void NavigateToDashboard(long dashboardId)
     {
         var url = $"{Configuration.BaseUrl}ui/#{Configuration.ProjectName}/dashboard/{dashboardId}";
@@ -32,12 +37,12 @@ public class DashboardPage : BasePage
         NavigateAndWaitForReady(url);
     }
 
-    public void AddWidget(string widgetType, string widgetName)
+    public void AddWidget(string widgetType, string? widgetName = null)
     {
         Logger.LogInformation("[{Page}] Opening Add widget wizard for {Type}", Name, widgetType);
         AddNewWidgetBtn.Click();
         AddWidgetDialog.WaitUntilVisible();
-        AddWidgetDialog.Submit(widgetType, widgetName);
+        AddWidgetDialog.Submit(widgetType, widgetName ?? widgetType);
     }
 
     public bool IsWidgetVisible(string widgetName)
@@ -171,4 +176,12 @@ public class DashboardPage : BasePage
             return false;
         }
     }
+
+    public List<WidgetComponent> GetVisibleWidgets() =>
+        Driver.FindElements(CommonLocators.Widget)
+        .Select(e => new WidgetComponent(e))
+        .ToList();
+
+    public void MoveWidgetOffset(WidgetComponent widget, int? offset, Movement movement) =>
+        widget.DragAndDropTo(offset, movement);
 }

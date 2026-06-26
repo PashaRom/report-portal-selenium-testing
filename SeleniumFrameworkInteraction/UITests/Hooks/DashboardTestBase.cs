@@ -3,7 +3,6 @@ using Core.Base;
 using Core.DI;
 using Core.Enum;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
 
 namespace UITests.Hooks;
 

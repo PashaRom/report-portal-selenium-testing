@@ -1,6 +1,4 @@
 using Allure.NUnit.Attributes;
-using Business.Steps;
-using Core.DI;
 using Core.Enum;
 using UITests.Hooks;
 

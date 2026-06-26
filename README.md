@@ -256,6 +256,9 @@ Timeouts.Sec30  // 30 s
 | `MoveToElementAndClick(element, name)` | Moves cursor to element then clicks via `Selenium.Interactions.Actions`. Use when standard click is intercepted or element needs hover |
 | `DragAndDrop(source, name, target, name)` | Drags source element and drops on target |
 | `DragAndDropByOffset(source, name, offsetX, offsetY)` | Drags source element by pixel offset |
+| `DragAndDropByOffset(source, sourceName, offset, movement)` | Drags the source element and drops it at the given pixel offset in the specified direction (Movement) |
+| `Resize(handle, sourceName, offsetX, offsetY)` | Resize element at the given pixel offset from its current size |
+| `ScrollToElementTop(element, elementName)` | Scrolls the page until the given element is at the top of the viewport (or as close as possible) |
 
 **JavaScript:**
 
@@ -473,6 +476,8 @@ Current test suites:
 | `DashboardAllWidgetsTests` | `dashboard_all_widgets` | Add all widget types and verify visibility |
 | `DashboardAddDialogTests` | `dashboard_add_dialog` | Add Dashboard dialog validation (name errors, cancel) |
 | `DashboardLockTests` | `dashboard_lock` | Lock / Unlock dashboard availability |
+| `DashboardResizeWidgetTests` | `dashboard_resize` | Create a dashboard with 5 available widgets and resize ones |
+| `DashboardMoveWidgetTests` | `dashboard_movement_widget` | Move widget and check new location |
 
 ### Test Data
 

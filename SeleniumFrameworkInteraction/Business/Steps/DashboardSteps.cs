@@ -5,10 +5,14 @@ using Core.Drivers;
 using Core.Helpers;
 using Core.Structures;
 using System.Text.RegularExpressions;
+using OpenQA.Selenium;
+using Core.Base;
+using Microsoft.Extensions.Logging;
+using Core.Enum;
 
 namespace Business.Steps;
 
-public class DashboardSteps
+public class DashboardSteps : BaseSteps
 {
     private readonly DashboardScenarioContext _context = new();
     private readonly DashboardListPage _listPage;
@@ -71,13 +75,21 @@ public class DashboardSteps
 
     // ── Widget operations ────────────────────────────────────
 
-    public void AddWidget(string widgetType, string widgetName)
+    public void AddWidget(string widgetType, string? widgetName = null)
     {
         _dashboardPage.AddWidget(widgetType, widgetName);
         WaitHelper.Until(_ => _systemAlertDialog.IsDisplayed, timeout: Timeouts.Sec2);
         if (_systemAlertDialog.IsDisplayed)
         {
             _systemAlertDialog.Close();
+        }
+    }
+
+    public void AddWidgets(List<string> widgetNames)
+    {
+        foreach (string widgetName in widgetNames)
+        {
+            AddWidget(widgetName);
         }
     }
 
@@ -93,4 +105,40 @@ public class DashboardSteps
     public void UnlockDashboard() => _dashboardPage.ClickUnlock();
     public bool IsLockAvailable() => _dashboardPage.IsLockAvailable();
     public bool IsUnlockAvailable() => _dashboardPage.IsUnlockAvailable();
+
+    public void ResizeWidget(string widgetName, int offsetX, int offsetY)
+    {
+        var widgetList = _dashboardPage.GetVisibleWidgets();
+        var targetWidget = widgetList.FirstOrDefault(e => e.TitleText.Equals(widgetName));
+        ActionHelper.ScrollToElementTop(targetWidget.Element, targetWidget.TitleText);
+        targetWidget?.Resize(offsetX, offsetY);
+
+    }
+
+    public List<WidgetComponent> GetVisibleWidgets() => _dashboardPage.GetVisibleWidgets();
+
+    public WidgetComponent? GetWidgetByName(string widgetName)
+    {
+        var widgetList = _dashboardPage.GetVisibleWidgets();
+
+        foreach (var widget in widgetList)
+        {
+            try
+            {
+                if (widget.TitleText.Equals(widgetName))
+                    return widget;
+            }
+            catch (NoSuchElementException)
+            {
+                Logger.LogInformation("Widget '{WidgetName}' not found in the list as a visible widget.", widgetName);
+            }
+        }
+        return null;
+    }
+
+    public void MoveWidget(string widgetName, int? offset, Movement movement)
+    {
+        var widget = GetWidgetByName(widgetName);
+        _dashboardPage.MoveWidgetOffset(widget, offset, movement);
+    }
 }

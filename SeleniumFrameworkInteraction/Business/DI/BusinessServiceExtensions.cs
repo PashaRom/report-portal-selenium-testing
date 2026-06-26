@@ -23,6 +23,7 @@ public static class BusinessServiceExtensions
         services.AddTransient<AddWidgetDialog>();
         services.AddTransient<DeleteDashboardDialog>();
         services.AddTransient<SystemAlertDialog>();
+        services.AddTransient<WidgetComponent>();
 
         // Pages — transient
         services.AddTransient<LoginPage>();
