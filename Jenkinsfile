@@ -28,7 +28,6 @@ pipeline {
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
             ALLURE_RESULTS = 'allure-results'
-            REPORTPORTAL_SERVER_APIKEY = credentials('RP_API_KEY')
     }
 
     stages {
@@ -86,17 +85,19 @@ pipeline {
                             stage("Run on ${b}") {
                                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                                     dir("${env.PROJECT_DIR}/UITests") {
-                                        sh """
-                                        mkdir -p ${env.ALLURE_RESULTS}/${b}
+                                        withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
+                                            sh """
+                                            mkdir -p ${env.ALLURE_RESULTS}/${b}
 
-                                        BROWSERS=${b} \
-                                        BaseUrl=${env.BASE_URL} \
-                                        DriverSettings__Remote=true \
-                                        ReportPortal__Server__ApiKey=${env.REPORTPORTAL_SERVER_APIKEY} \
-                                        dotnet test --no-build \
-                                            --results-directory ${env.ALLURE_RESULTS}/${b} \
-                                            --filter "${params.TEST_FILTER}"
-                                        """
+                                            BROWSERS=${b} \\
+                                            BaseUrl=${env.BASE_URL} \\
+                                            DriverSettings__Remote=true \\
+                                            ReportPortal__Server__ApiKey=\$RP_KEY \\
+                                            dotnet test --no-build \\
+                                                --results-directory ${env.ALLURE_RESULTS}/${b} \\
+                                                --filter "${params.TEST_FILTER}"
+                                            """
+                                        }
                                     }
                                 }
                             }
