@@ -28,6 +28,7 @@ pipeline {
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
             ALLURE_RESULTS = 'allure-results'
+            REPORTPORTAL_SERVER_APIKEY = credentials('RP_API_KEY')
     }
 
     stages {
