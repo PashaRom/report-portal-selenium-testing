@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    
+environment {
+        PROJECT_DIR = 'tests/ReportPortal.Tests'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -17,13 +22,23 @@ pipeline {
 
         stage('Restore') {
             steps {
-                sh 'dotnet restore'
+                dir('SeleniumFrameworkInteraction') {
+                    sh 'dotnet restore'
+                }
+                dir("${env.PROJECT_DIR}") {
+                    sh 'dotnet restore'
+                }
             }
         }
 
         stage('Build') {
             steps {
-                sh 'dotnet build --no-restore'
+                dir('SeleniumFrameworkInteraction') {
+                    sh 'dotnet build --no-restore'
+                }
+                dir("${env.PROJECT_DIR}") {
+                    sh 'dotnet build --no-restore'
+                }
             }
         }
     }
