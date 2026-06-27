@@ -143,20 +143,18 @@ pipeline {
         stage('Read RP logs') {
             steps {
                 sh '''
-                echo "=== Latest ReportPortal log ==="
-                # Берём самый свежий лог после теста
-                LATEST=$(ls -t SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.NUnitExtension.*.log 2>/dev/null | head -1)
+                echo "=== Newest RP log ==="
+                LATEST=$(find SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ \
+                    -name "ReportPortal.NUnitExtension.*.log" \
+                    -newer SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.NUnitExtension.9885.log \
+                    | head -1)
+                
                 if [ -n "$LATEST" ]; then
                     echo "File: $LATEST"
                     cat "$LATEST"
                 else
-                    echo "No RP logs found"
-                fi
-                
-                echo "=== ReportPortal.Shared latest log ==="
-                LATEST2=$(ls -t SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.Shared.*.log 2>/dev/null | head -1)
-                if [ -n "$LATEST2" ]; then
-                    cat "$LATEST2"
+                    echo "No new RP log found - checking all logs by date:"
+                    ls -lt SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.NUnitExtension.*.log | head -3
                 fi
                 '''
             }
