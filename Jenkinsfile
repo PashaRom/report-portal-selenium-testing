@@ -122,6 +122,28 @@ pipeline {
                 }
             }
         }
+
+        stage('Read RP logs') {
+            steps {
+                sh '''
+                echo "=== Latest ReportPortal log ==="
+                # Берём самый свежий лог после теста
+                LATEST=$(ls -t SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.NUnitExtension.*.log 2>/dev/null | head -1)
+                if [ -n "$LATEST" ]; then
+                    echo "File: $LATEST"
+                    cat "$LATEST"
+                else
+                    echo "No RP logs found"
+                fi
+                
+                echo "=== ReportPortal.Shared latest log ==="
+                LATEST2=$(ls -t SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.Shared.*.log 2>/dev/null | head -1)
+                if [ -n "$LATEST2" ]; then
+                    cat "$LATEST2"
+                fi
+                '''
+            }
+        }
         
         stage('Publish Allure') {
             steps {
