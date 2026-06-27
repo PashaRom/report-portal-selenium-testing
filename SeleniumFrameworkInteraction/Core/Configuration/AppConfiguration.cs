@@ -30,6 +30,12 @@ public class AppConfiguration : IAppConfiguration
             driverSettings.Browsers = new List<BrowserType> { BrowserType.Chrome };
         }
 
+        var remoteUrl = Environment.GetEnvironmentVariable("REMOTE_URL");
+        if (!string.IsNullOrWhiteSpace(remoteUrl))
+        {
+            driverSettings.RemoteUri = remoteUrl;
+        }
+
         DriverSettings = driverSettings;
         LogSettings = config.GetSection("LogSettings").Get<LogSettings>() ?? new LogSettings();
         BaseUrl = (config["BaseUrl"] ?? "http://localhost:8080/").TrimEnd('/') + '/';
