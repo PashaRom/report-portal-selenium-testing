@@ -46,13 +46,7 @@ pipeline {
                     sh """
                     mkdir -p ${ALLURE_RESULTS}
 
-                    BROWSERS=${BROWSERS}
-                    DriverSettings__Headless=true
-                    DriverSettings__Remote=true
-                    dotnet test \
-                        --no-build \
-                        --logger "trx" \
-                        --results-directory ${ALLURE_RESULTS}
+                    BROWSERS=${BROWSERS} DriverSettings__Headless=true DriverSettings__Remote=true dotnet test --no-build --logger "trx" --results-directory ${ALLURE_RESULTS}
                     """
                 }
             }
