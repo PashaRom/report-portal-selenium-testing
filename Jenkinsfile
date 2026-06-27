@@ -2,6 +2,27 @@ pipeline {
     agent any
 
     
+    options {
+        buildDiscarder(logRotator(
+            numToKeepStr: '10'
+        ))
+    }
+
+    
+    properties([
+        parameters([
+            [
+                $class: 'ExtendedChoiceParameterDefinition',
+                name: 'BROWSERS',
+                type: 'PT_CHECKBOX',
+                value: 'Chrome,Firefox,Edge',
+                description: 'Select browsers',
+                multiSelectDelimiter: ','
+            ]
+        ])
+    ])
+
+    
     parameters {
         string(
             name: 'TEST_FILTER',
@@ -16,7 +37,6 @@ pipeline {
             BASE_URL = 'http://192.168.1.4:8080/'
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
-            BROWSERS = 'Chrome'
             ALLURE_RESULTS = 'allure-results'
     }
 
@@ -51,34 +71,56 @@ pipeline {
         }
 
         
+        
         stage('Test (Selenoid)') {
             steps {
-                dir("${env.PROJECT_DIR}/UITests") {
-                    sh """
-                    mkdir -p ${env.ALLURE_RESULTS}
+                script {
+                    def browsers = params.BROWSERS.split(',')
 
-                    BROWSERS=${env.BROWSERS} \
-                    BaseUrl=${env.BASE_URL} \
-                    DriverSettings__Headless=true \
-                    DriverSettings__Remote=true \
-                    dotnet test --no-build --logger "trx" \
-                        --results-directory ${env.ALLURE_RESULTS} \
-                        --filter "${params.TEST_FILTER}"
-                    """
+                    def parallelStages = [:]
+
+                    for (int i = 0; i < browsers.size(); i++) {
+                        def browser = browsers[i].trim()
+
+                        parallelStages[browser] = {
+                            stage("Run on ${browser}") {
+                                dir("${env.PROJECT_DIR}/UITests") {
+                                    sh """
+                                    mkdir -p ${env.ALLURE_RESULTS}/${browser}
+
+                                    BROWSERS=${browser} \
+                                    BaseUrl=${env.BASE_URL} \
+                                    DriverSettings__Headless=true \
+                                    DriverSettings__Remote=true \
+                                    dotnet test --no-build \
+                                        --logger "trx" \
+                                        --results-directory ${env.ALLURE_RESULTS}/${browser} \
+                                        --filter "${params.TEST_FILTER}"
+                                    """
+                                }
+                            }
+                        }
+                    }
+
+                    parallel parallelStages
                 }
             }
         }
-
-        
         
         stage('Publish Allure') {
             steps {
-                allure([
-                        results: [[path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}"]]
-                ])
+                script {
+                    step([
+                        $class: 'AllureReportPublisher',
+                        results: [
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}/Chrome"],
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}/Firefox"],
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}/Edge"]
+                        ]
+                    ])
+                }
             }
         }
-
 
     }
     post {
