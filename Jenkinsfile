@@ -13,9 +13,9 @@ pipeline {
 
     
     environment {
-            BASE_URL = 'http://host.docker.internal:8080/'
+            BASE_URL = 'http://192.168.1.4:8080/'
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
-            REMOTE_URL = 'http://host.docker.internal:4444/wd/hub'
+            REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
             BROWSERS = 'Chrome'
             ALLURE_RESULTS = 'allure-results'
     }
