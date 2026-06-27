@@ -52,11 +52,11 @@ pipeline {
         
         stage('Test (Selenoid)') {
             steps {
-                dir("${PROJECT_DIR}/UITests") {
+                dir("${env.PROJECT_DIR}/UITests") {
                     sh """
-                    mkdir -p ${ALLURE_RESULTS}
+                    mkdir -p ${env.ALLURE_RESULTS}
 
-                    BROWSERS=${BROWSERS} DriverSettings__Headless=true DriverSettings__Remote=true dotnet test --no-build --logger "trx" --results-directory ${ALLURE_RESULTS} --filter "${TEST_FILTER}"
+                    BROWSERS=${env.BROWSERS} DriverSettings__Headless=true DriverSettings__Remote=true dotnet test --no-build --logger "trx" --results-directory ${env.ALLURE_RESULTS} --filter "${params.TEST_FILTER}"
                     """
                 }
             }
@@ -67,7 +67,7 @@ pipeline {
             steps {
                 allure includeProperties: false,
                     jdk: '',
-                    results: [[path: "${PROJECT_DIR}/UITests/${ALLURE_RESULTS}"]]
+                    results: [[path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}"]]
             }
         }
     }
