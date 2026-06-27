@@ -7,7 +7,7 @@ pipeline {
             REMOTE_URL = 'http://host.docker.internal:4444/wd/hub'
             BROWSERS = 'Chrome'
             ALLURE_RESULTS = 'allure-results'
-        }
+    }
 
     stages {
         stage('Checkout') {
@@ -16,63 +16,61 @@ pipeline {
                         url: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
             }
         }
-    }
 
-    stage('Check .NET') {
-        steps {
-            sh 'dotnet --version'
-        }
-    }
-
-    stage('Restore') {
-        steps {
-            dir("${env.PROJECT_DIR}") {
-                sh 'dotnet restore'
+        stage('Check .NET') {
+            steps {
+                sh 'dotnet --version'
             }
         }
-    }
 
-    stage('Build') {
-        steps {
-            dir("${env.PROJECT_DIR}") {
-                sh 'dotnet build --no-restore'
+        stage('Restore') {
+            steps {
+                dir("${env.PROJECT_DIR}") {
+                    sh 'dotnet restore'
+                }
             }
         }
-    }
 
-        
-    stage('Test (Selenoid)') {
-        steps {
-            dir("${PROJECT_DIR}/UITests") {
-                sh """
-                mkdir -p ${ALLURE_RESULTS}
-
-                BROWSERS=${BROWSERS}
-                DriverSettings__Headless=true
-                DriverSettings__Remote=true
-                dotnet test \
-                    --no-build \
-                    --logger "trx" \
-                    --results-directory ${ALLURE_RESULTS}
-                """
+        stage('Build') {
+            steps {
+                dir("${env.PROJECT_DIR}") {
+                    sh 'dotnet build --no-restore'
                 }
             }
         }
 
         
-    stage('Publish Allure') {
-        steps {
-            allure includeProperties: false,
-                jdk: '',
-                results: [[path: "${PROJECT_DIR}/UITests/${ALLURE_RESULTS}"]]
+        stage('Test (Selenoid)') {
+            steps {
+                dir("${PROJECT_DIR}/UITests") {
+                    sh """
+                    mkdir -p ${ALLURE_RESULTS}
+
+                    BROWSERS=${BROWSERS}
+                    DriverSettings__Headless=true
+                    DriverSettings__Remote=true
+                    dotnet test \
+                        --no-build \
+                        --logger "trx" \
+                        --results-directory ${ALLURE_RESULTS}
+                    """
+                }
+            }
         }
-    }
+
+        
+        stage('Publish Allure') {
+            steps {
+                allure includeProperties: false,
+                    jdk: '',
+                    results: [[path: "${PROJECT_DIR}/UITests/${ALLURE_RESULTS}"]]
+            }
+        }
     
-    post {
-        always {
-            archiveArtifacts artifacts: '**/allure-results/**'
+        post {
+            always {
+                archiveArtifacts artifacts: '**/allure-results/**'
+            }
         }
     }
-
-
 }
