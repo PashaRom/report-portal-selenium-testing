@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\global\appsettings.json" Link="appsettings.json">
+    <None Include="..\global\appsettings.json" Link="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Data\CSV\RP_USERS_CSV_Report.csv" Link="Data\CSV\RP_USERS_CSV_Report.csv">
