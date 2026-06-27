@@ -80,24 +80,25 @@ pipeline {
                     
                     for (browser in browsers) {
                         def b = browser
-
+                      
                         parallelStages[b] = {
                             stage("Run on ${b}") {
-                                dir("${env.PROJECT_DIR}/UITests") {
-                                    sh """
-                                    mkdir -p ${env.ALLURE_RESULTS}/${b}
+                                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                                    dir("${env.PROJECT_DIR}/UITests") {
+                                        sh """
+                                        mkdir -p ${env.ALLURE_RESULTS}/${b}
 
-                                    BROWSERS=${b} \
-                                    BaseUrl=${env.BASE_URL} \
-                                    DriverSettings__Remote=true \
-                                    dotnet test --no-build \
-                                        --results-directory ${env.ALLURE_RESULTS}/${b} \
-                                        --filter "${params.TEST_FILTER}"
-                                    """
+                                        BROWSERS=${b} \
+                                        BaseUrl=${env.BASE_URL} \
+                                        DriverSettings__Remote=true \
+                                        dotnet test --no-build \
+                                            --results-directory ${env.ALLURE_RESULTS}/${b} \
+                                            --filter "${params.TEST_FILTER}"
+                                        """
+                                    }
                                 }
                             }
                         }
-                    }
 
                     parallel parallelStages
                 }
