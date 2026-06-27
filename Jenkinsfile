@@ -61,6 +61,23 @@ pipeline {
             }
         }
 
+        stage('Debug token') {
+            steps {
+                withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
+                    sh '''
+                    echo "Token starts with: $(echo $RP_KEY | cut -c1-10)..."
+                    echo "Token length: $(echo -n $RP_KEY | wc -c)"
+                    
+                    # Проверим токен напрямую против API
+                    curl -s -o /tmp/rp_check.json -w "HTTP_STATUS:%{http_code}" \
+                        -H "Authorization: Bearer $RP_KEY" \
+                        http://192.168.1.4:8080/api/v1/report_portal/launch
+                    cat /tmp/rp_check.json
+                    '''
+                }
+            }
+        }
+
         stage('Check RP config') {
             steps {
                 sh '''
