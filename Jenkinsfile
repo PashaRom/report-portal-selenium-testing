@@ -60,38 +60,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Debug token') {
-            steps {
-                withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
-                    sh '''
-                    echo "Token starts with: $(echo $RP_KEY | cut -c1-10)..."
-                    echo "Token length: $(echo -n $RP_KEY | wc -c)"
-                    
-                    # Проверим токен напрямую против API
-                    curl -s -o /tmp/rp_check.json -w "HTTP_STATUS:%{http_code}" \
-                        -H "Authorization: Bearer $RP_KEY" \
-                        http://192.168.1.4:8080/api/v1/report_portal/launch
-                    cat /tmp/rp_check.json
-                    '''
-                }
-            }
-        }
-
-        stage('Check RP config') {
-            steps {
-                sh '''
-                echo "=== ReportPortal.config.json in output ==="
-                cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.config.json || echo "FILE NOT FOUND"
-                
-                echo "=== ReportPortal.addins ==="
-                cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.addins || echo "FILE NOT FOUND"
-                
-                echo "=== ReportPortal DLL ==="
-                ls SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal* || echo "NO RP FILES"
-                '''
-            }
-        }
         
         stage('Test (Selenoid)') {
             steps {
@@ -140,26 +108,6 @@ pipeline {
             }
         }
 
-        stage('Read RP logs') {
-            steps {
-                sh '''
-                echo "=== Newest RP log ==="
-                LATEST=$(find SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ \
-                    -name "ReportPortal.NUnitExtension.*.log" \
-                    -newer SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.NUnitExtension.9885.log \
-                    | head -1)
-                
-                if [ -n "$LATEST" ]; then
-                    echo "File: $LATEST"
-                    cat "$LATEST"
-                else
-                    echo "No new RP log found - checking all logs by date:"
-                    ls -lt SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.NUnitExtension.*.log | head -3
-                fi
-                '''
-            }
-        }
-        
         stage('Publish Allure') {
             steps {
                 script {
