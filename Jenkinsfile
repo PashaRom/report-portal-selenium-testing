@@ -50,7 +50,7 @@ pipeline {
                     '''
                 }
             }
-}
+        }
 
         stage('Check .NET') {
             steps {
@@ -106,7 +106,7 @@ pipeline {
                                             BROWSERS=${b} \\
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
-                                            ReportPortal__Server__ApiKey=\$RP_KEY \\
+                                            REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_RESULTS}/${b} \\
                                                 --filter "${params.TEST_FILTER}"
