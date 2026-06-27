@@ -9,28 +9,18 @@ pipeline {
     }
 
     
-    properties([
-        parameters([
-            [
-                $class: 'ExtendedChoiceParameterDefinition',
-                name: 'BROWSERS',
-                type: 'PT_CHECKBOX',
-                value: 'Chrome,Firefox,Edge',
-                description: 'Select browsers',
-                multiSelectDelimiter: ','
-            ]
-        ])
-    ])
-
     
     parameters {
+        booleanParam(name: 'CHROME',  defaultValue: true,  description: 'Run Chrome')
+        booleanParam(name: 'EDGE',    defaultValue: false, description: 'Run Edge')
+        booleanParam(name: 'FIREFOX', defaultValue: false, description: 'Run Firefox')
+
         string(
             name: 'TEST_FILTER',
             defaultValue: 'FullyQualifiedName~Cancel_ClosesDialog',
             description: 'dotnet test filter (например: TestCategory=dashboard_crud)'
         )
     }
-
 
     
     environment {
@@ -75,26 +65,33 @@ pipeline {
         stage('Test (Selenoid)') {
             steps {
                 script {
-                    def browsers = params.BROWSERS.split(',')
+                    def browsers = []
+
+                    if (params.CHROME)  browsers.add('Chrome')
+                    if (params.EDGE)    browsers.add('Edge')
+                    if (params.FIREFOX) browsers.add('Firefox')
+
+                    
+                    if (browsers.isEmpty()) {
+                        error("No browsers selected!")
+                    }
 
                     def parallelStages = [:]
+                    
+                    for (browser in browsers) {
+                        def b = browser
 
-                    for (int i = 0; i < browsers.size(); i++) {
-                        def browser = browsers[i].trim()
-
-                        parallelStages[browser] = {
-                            stage("Run on ${browser}") {
+                        parallelStages[b] = {
+                            stage("Run on ${b}") {
                                 dir("${env.PROJECT_DIR}/UITests") {
                                     sh """
-                                    mkdir -p ${env.ALLURE_RESULTS}/${browser}
+                                    mkdir -p ${env.ALLURE_RESULTS}/${b}
 
-                                    BROWSERS=${browser} \
+                                    BROWSERS=${b} \
                                     BaseUrl=${env.BASE_URL} \
-                                    DriverSettings__Headless=true \
                                     DriverSettings__Remote=true \
                                     dotnet test --no-build \
-                                        --logger "trx" \
-                                        --results-directory ${env.ALLURE_RESULTS}/${browser} \
+                                        --results-directory ${env.ALLURE_RESULTS}/${b} \
                                         --filter "${params.TEST_FILTER}"
                                     """
                                 }
