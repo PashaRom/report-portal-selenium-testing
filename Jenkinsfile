@@ -28,6 +28,7 @@ pipeline {
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
             ALLURE_RESULTS = 'allure-results'
+            REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
     }
 
     stages {
@@ -37,6 +38,19 @@ pipeline {
                         url: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
             }
         }
+
+        stage('Check RP connectivity') {
+            steps {
+                withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
+                    sh '''
+                    echo "Testing ReportPortal connectivity..."
+                    curl -s -o /dev/null -w "HTTP Status: %{http_code}" \
+                        -H "Authorization: Bearer $RP_KEY" \
+                        http://${env.REPORT_PORTAL_URL}/api/v1/report_portal/launch || echo "CURL FAILED"
+                    '''
+                }
+            }
+}
 
         stage('Check .NET') {
             steps {
