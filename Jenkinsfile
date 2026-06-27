@@ -92,6 +92,7 @@ pipeline {
                                         BROWSERS=${b} \
                                         BaseUrl=${env.BASE_URL} \
                                         DriverSettings__Remote=true \
+                                        ReportPortal__Server__ApiKey=${env.REPORTPORTAL_SERVER_APIKEY} \
                                         dotnet test --no-build \
                                             --results-directory ${env.ALLURE_RESULTS}/${b} \
                                             --filter "${params.TEST_FILTER}"
