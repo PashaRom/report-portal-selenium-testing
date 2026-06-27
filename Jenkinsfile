@@ -72,11 +72,13 @@ pipeline {
         
         stage('Publish Allure') {
             steps {
-                allure includeProperties: false,
-                    jdk: '',
-                    results: [[path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}"]]
+                allure([
+                    results: [[path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}"]],
+                    reportBuildPolicy: 'ALWAYS'
+                ])
             }
         }
+
     }
     post {
         always {
