@@ -15,6 +15,7 @@
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit.Analyzers" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="ReportPortal.NUnit" Version="4.9.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +27,12 @@
     <None Include="..\global\appsettings.json" Link="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+	<None Include="..\global\ReportPortal.config.json" Link="ReportPortal.config.json">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+	<None Include="..\global\ReportPortal.addins" Link="ReportPortal.addins">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
     <Content Include="Data\CSV\RP_USERS_CSV_Report.csv" Link="Data\CSV\RP_USERS_CSV_Report.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
