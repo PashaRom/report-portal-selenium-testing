@@ -3,7 +3,7 @@ pipeline {
 
     
 environment {
-        PROJECT_DIR = 'tests/ReportPortal.Tests'
+        PROJECT_DIR = 'SeleniumFrameworkInteraction'
     }
 
     stages {
@@ -22,9 +22,6 @@ environment {
 
         stage('Restore') {
             steps {
-                dir('SeleniumFrameworkInteraction') {
-                    sh 'dotnet restore'
-                }
                 dir("${env.PROJECT_DIR}") {
                     sh 'dotnet restore'
                 }
@@ -33,9 +30,6 @@ environment {
 
         stage('Build') {
             steps {
-                dir('SeleniumFrameworkInteraction') {
-                    sh 'dotnet build --no-restore'
-                }
                 dir("${env.PROJECT_DIR}") {
                     sh 'dotnet build --no-restore'
                 }
