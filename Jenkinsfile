@@ -4,6 +4,9 @@ pipeline {
     
 environment {
         PROJECT_DIR = 'SeleniumFrameworkInteraction'
+        REMOTE_URL = 'http://host.docker.internal:4444/wd/hub'
+        BROWSERS = 'Chrome'
+        ALLURE_RESULTS = 'allure-results'
     }
 
     stages {
@@ -35,5 +38,40 @@ environment {
                 }
             }
         }
+
+        
+        stage('Test (Selenoid)') {
+            steps {
+                dir("${PROJECT_DIR}/UITests") {
+                    sh """
+                    mkdir -p ${ALLURE_RESULTS}
+
+                    BROWSERS=${BROWSERS}
+                    DriverSettings__Headless=true
+                    DriverSettings__Remote=true
+                    dotnet test \
+                      --no-build \
+                      --logger "trx" \
+                      --results-directory ${ALLURE_RESULTS}
+                    """
+                }
+            }
+        }
+
+        
+        stage('Publish Allure') {
+            steps {
+                allure includeProperties: false,
+                       jdk: '',
+                       results: [[path: "${PROJECT_DIR}/UITests/${ALLURE_RESULTS}"]]
+            }
+        }
+    
+    post {
+        always {
+            archiveArtifacts artifacts: '**/allure-results/**'
+        }
     }
+
+
 }
