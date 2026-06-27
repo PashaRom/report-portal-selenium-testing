@@ -61,7 +61,20 @@ pipeline {
             }
         }
 
-        
+        stage('Check RP config') {
+            steps {
+                sh '''
+                echo "=== ReportPortal.config.json in output ==="
+                cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.config.json || echo "FILE NOT FOUND"
+                
+                echo "=== ReportPortal.addins ==="
+                cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal.addins || echo "FILE NOT FOUND"
+                
+                echo "=== ReportPortal DLL ==="
+                ls SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/ReportPortal* || echo "NO RP FILES"
+                '''
+            }
+        }
         
         stage('Test (Selenoid)') {
             steps {
