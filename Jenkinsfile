@@ -66,11 +66,10 @@ pipeline {
                     results: [[path: "${PROJECT_DIR}/UITests/${ALLURE_RESULTS}"]]
             }
         }
-    
-        post {
-            always {
-                archiveArtifacts artifacts: '**/allure-results/**'
-            }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '**/allure-results/**'
         }
     }
 }
