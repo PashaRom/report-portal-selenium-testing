@@ -2,6 +2,16 @@ pipeline {
     agent any
 
     
+    parameters {
+        string(
+            name: 'TEST_FILTER',
+            defaultValue: 'FullyQualifiedName~Cancel_ClosesDialog',
+            description: 'dotnet test filter (например: TestCategory=dashboard_crud)'
+        )
+    }
+
+
+    
     environment {
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://host.docker.internal:4444/wd/hub'
@@ -46,7 +56,7 @@ pipeline {
                     sh """
                     mkdir -p ${ALLURE_RESULTS}
 
-                    BROWSERS=${BROWSERS} DriverSettings__Headless=true DriverSettings__Remote=true dotnet test --no-build --logger "trx" --results-directory ${ALLURE_RESULTS}
+                    BROWSERS=${BROWSERS} DriverSettings__Headless=true DriverSettings__Remote=true dotnet test --no-build --logger "trx" --results-directory ${ALLURE_RESULTS} --filter "${TEST_FILTER}"
                     """
                 }
             }
