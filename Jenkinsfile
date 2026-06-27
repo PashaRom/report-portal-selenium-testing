@@ -99,6 +99,7 @@ pipeline {
                                 }
                             }
                         }
+                    }
 
                     parallel parallelStages
                 }
