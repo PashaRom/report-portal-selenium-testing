@@ -70,16 +70,15 @@ pipeline {
         }
 
         
+        
         stage('Publish Allure') {
             steps {
-                script {
-                    step([
-                        $class: 'AllureReportPublisher',
+                allure([
                         results: [[path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}"]]
-                    ])
-                }
+                ])
             }
         }
+
 
     }
     post {
