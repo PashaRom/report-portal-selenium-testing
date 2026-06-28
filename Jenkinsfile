@@ -127,12 +127,14 @@ pipeline {
         stage('Check Allure results') {
             steps {
                 sh '''
-                echo "=== Chrome ==="
-                ls -la SeleniumFrameworkInteraction/UITests/allure-results/Chrome/ || echo "EMPTY or NOT FOUND"
-                echo "=== Edge ==="
-                ls -la SeleniumFrameworkInteraction/UITests/allure-results/Edge/ || echo "EMPTY or NOT FOUND"
-                echo "=== Firefox ==="
-                ls -la SeleniumFrameworkInteraction/UITests/allure-results/Firefox/ || echo "EMPTY or NOT FOUND"
+                echo "=== Find ALL allure result files ==="
+                find /var/jenkins_home/workspace/ui-tests-pipeline -name "*-result.json" 2>/dev/null
+
+                echo "=== Find ALL allure-results dirs ==="
+                find /var/jenkins_home/workspace/ui-tests-pipeline -type d -name "allure-results" 2>/dev/null
+
+                echo "=== allureConfig in bin ==="
+                cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/allureConfig.json
                 '''
             }
         }
