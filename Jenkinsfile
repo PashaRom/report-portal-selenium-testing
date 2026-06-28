@@ -125,6 +125,13 @@ pipeline {
             }
         }
 
+        stage('Check Allure version') {
+            steps {
+                sh 'cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/Allure.NUnit.dll | strings | grep -i "version" | head -5 || true'
+                sh 'find /var/jenkins_home -name "*.deps.json" -path "*/UITests/*" | xargs grep -l "Allure" | head -1 | xargs cat | grep -A2 "Allure.NUnit"'
+            }
+        }
+
         stage('Publish Allure') {
             steps {
                 script {
