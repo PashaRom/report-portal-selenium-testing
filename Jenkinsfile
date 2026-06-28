@@ -111,6 +111,11 @@ pipeline {
                                                 --results-directory ${env.ALLURE_DIR}/${b} \\
                                                 --filter "${params.TEST_FILTER}" \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
+
+                                            echo "=== After test: ${b} ==="
+ls -la ${env.WORKSPACE}/${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/${b}/
+echo "=== bin/allure-results ==="
+ls -la bin/Debug/net8.0/allure-results/ 2>/dev/null || echo "NOT FOUND"
                                             """
                                         }
                                     }
