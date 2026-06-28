@@ -79,7 +79,9 @@ pipeline {
                             dotnet tool run dotnet-sonarscanner begin \
                                 /k:"selenium-framework" \
                                 /d:sonar.login="$SONAR_TOKEN" \
-                                /n:"Selenium Framework"
+                                /n:"Selenium Framework" \
+                                /d:sonar.tests=UITests \
+                                /d:sonar.sources=Core,Business
 
                             dotnet build --no-restore
 
@@ -93,11 +95,11 @@ pipeline {
                 }
             }
         }
-
-        stage('Build') {
+        
+        stage('Quality Gate') {
             steps {
-                dir("${env.PROJECT_DIR}") {
-                    sh 'dotnet build --no-restore'
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
                 }
             }
         }
