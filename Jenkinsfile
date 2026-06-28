@@ -98,7 +98,7 @@ pipeline {
                                     dir("${env.PROJECT_DIR}/UITests") {
                                         withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
                                             sh """
-                                            mkdir -p ${env.ALLURE_RESULTS}/${b}
+                                            mkdir -p ${env.WORKSPACE}/${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/${b}
 
                                             BROWSERS=${b} \\
                                             BaseUrl=${env.BASE_URL} \\
