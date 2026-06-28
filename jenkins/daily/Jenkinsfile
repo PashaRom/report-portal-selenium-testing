@@ -108,9 +108,9 @@ pipeline {
                 script {
                     def browsers = []
 
-                    browsers.add(params.CHROME)
-                    browsers.add(params.EDGE)
-                    browsers.add(params.FIREFOX)
+                        browsers.add('Chrome')
+                        browsers.add('Edge')
+                        browsers.add('Firefox')
 
                     def parallelStages = [:]
                     
@@ -127,7 +127,7 @@ pipeline {
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
-                                            ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
+                                            ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_DIR}/${b} \\
