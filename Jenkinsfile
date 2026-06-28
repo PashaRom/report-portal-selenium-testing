@@ -39,7 +39,7 @@ pipeline {
             BASE_URL = 'http://192.168.1.4:8080/'
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
-            ALLURE_RESULTS = 'allure-results'
+            ALLURE_DIR = 'allure-results'
             REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
     }
 
@@ -106,8 +106,9 @@ pipeline {
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
+                                            ALLURE_RESULTS=${env.ALLURE_DIR}/${b} \\
                                             dotnet test --no-build \\
-                                                --results-directory ${env.ALLURE_RESULTS}/${b} \\
+                                                --results-directory ${env.ALLURE_DIR}/${b} \\
                                                 --filter "${params.TEST_FILTER}" \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
                                             """
@@ -142,9 +143,9 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}/Chrome"],
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}/Firefox"],
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS}/Edge"]
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Chrome"],
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Firefox"],
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Edge"]
                         ]
                     ])
                 }
