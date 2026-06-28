@@ -145,9 +145,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Chrome"],
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Firefox"],
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Edge"]
+                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
                         ]
                     ])
                 }
@@ -157,7 +155,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: '**/allure-results/**'
+            archiveArtifacts artifacts: 'SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/allure-results/**'
         }
     }
 }
