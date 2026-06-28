@@ -70,23 +70,22 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     dir("${env.PROJECT_DIR}") {
                         withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                            sh '''
-                            dotnet tool install --global dotnet-sonarscanner || true
-                            export PATH="$PATH:/root/.dotnet/tools"
+                            sh '''                            
+                            dotnet new tool-manifest || true
+                            dotnet tool install dotnet-sonarscanner || true
+                            dotnet tool restore
 
-                            chmod +x /root/.dotnet/tools/dotnet-sonarscanner
-
-                            dotnet-sonarscanner begin \\
-                                /k:"selenium-framework" \\
-
-                                /d:sonar.projectName="Selenium Framework" \\
-                                /d:sonar.projectVersion="1.0"
+                            dotnet tool run dotnet-sonarscanner begin \
+                                /k:"selenium-framework" \
+                                /d:sonar.login="$SONAR_TOKEN" \
+                                /d:sonar.projectName="Selenium Framework"
 
                             dotnet build --no-restore
 
-                            dotnet-sonarscanner end \\
-                                /d:sonar.login="${SONAR_TOKEN}"
+                            dotnet tool run dotnet-sonarscanner end \
+                                /d:sonar.login="$SONAR_TOKEN"
                             '''
+
                         }
                     }
                 }
