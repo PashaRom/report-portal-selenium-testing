@@ -1,3 +1,5 @@
+using Allure.Net.Commons;
+using Allure.NUnit.Attributes;
 using Business.Components;
 using Business.Pages;
 using Core.DI;
@@ -30,22 +32,29 @@ public class DashboardSteps : BaseSteps
     public long CreatedDashboardId => _context.CreatedDashboardId;
     public string CreatedDashboardName => _context.CreatedDashboardName;
 
-    // ── Dialog ──────────────────────────────────────────────
-
     public AddDashboardDialog Dialog => _listPage.AddDashboardDialog;
 
+    // ── Dialog ──────────────────────────────────────────────
+
+    [AllureStep("Open Add Dashboard dialog")]
     public void OpenAddDialog() => _listPage.OpenAddDialog();
+
+    [AllureStep("Check if Add Dashboard dialog is open")]
     public bool IsAddDialogOpen() => _listPage.AddDashboardDialog.IsOpen();
+
+    [AllureStep("Check if Add Dashboard dialog is closed")]
     public bool IsAddDialogClosed() => _listPage.AddDashboardDialog.IsClosed();
 
     // ── Dashboard lifecycle ──────────────────────────────────
 
+    [AllureStep("Create dashboard with unique name")]
     public void CreateDashboardWithUniqueName()
     {
         var name = $"DC_{Guid.NewGuid():N}";
         CreateDashboardWithName(name);
     }
 
+    [AllureStep("Create dashboard with name '{name}'")]
     public void CreateDashboardWithName(string name)
     {
         var dasboardUrlPattern = @"dashboard/(\d+)";
@@ -62,19 +71,23 @@ public class DashboardSteps : BaseSteps
         }
     }
 
+    [AllureStep("Navigate to created dashboard")]
     public void NavigateToCreatedDashboard() =>
         _dashboardPage.NavigateToDashboard(_context.CreatedDashboardId);
 
+    [AllureStep("Delete dashboard")]
     public void DeleteDashboard()
     {
         _dashboardPage.DeleteDashboard();
         _context.Reset();
     }
 
+    [AllureStep("Check if dashboard '{name}' is in list")]
     public bool IsDashboardInList(string name) => _listPage.IsDashboardInList(name);
 
     // ── Widget operations ────────────────────────────────────
 
+    [AllureStep("Add widget '{widgetType}'")]
     public void AddWidget(string widgetType, string? widgetName = null)
     {
         _dashboardPage.AddWidget(widgetType, widgetName);
@@ -85,6 +98,7 @@ public class DashboardSteps : BaseSteps
         }
     }
 
+    [AllureStep("Add multiple widgets")]
     public void AddWidgets(List<string> widgetNames)
     {
         foreach (string widgetName in widgetNames)
@@ -93,6 +107,7 @@ public class DashboardSteps : BaseSteps
         }
     }
 
+    [AllureStep("Check if widget '{widgetName}' is visible")]
     public bool IsWidgetVisible(string widgetName) =>
         _dashboardPage.IsWidgetVisible(widgetName);
 
@@ -101,18 +116,25 @@ public class DashboardSteps : BaseSteps
 
     // ── Lock / Unlock ────────────────────────────────────────
 
+    [AllureStep("Lock dashboard")]
     public void LockDashboard() => _dashboardPage.ClickLock();
+
+    [AllureStep("Unlock dashboard")]
     public void UnlockDashboard() => _dashboardPage.ClickUnlock();
+
+    [AllureStep("Check if Lock is available")]
     public bool IsLockAvailable() => _dashboardPage.IsLockAvailable();
+
+    [AllureStep("Check if Unlock is available")]
     public bool IsUnlockAvailable() => _dashboardPage.IsUnlockAvailable();
 
+    [AllureStep("Resize widget '{widgetName}' by offset ({offsetX}, {offsetY})")]
     public void ResizeWidget(string widgetName, int offsetX, int offsetY)
     {
         var widgetList = _dashboardPage.GetVisibleWidgets();
         var targetWidget = widgetList.FirstOrDefault(e => e.TitleText.Equals(widgetName));
         ActionHelper.ScrollToElementTop(targetWidget.Element, targetWidget.TitleText);
         targetWidget?.Resize(offsetX, offsetY);
-
     }
 
     public List<WidgetComponent> GetVisibleWidgets() => _dashboardPage.GetVisibleWidgets();
@@ -120,7 +142,6 @@ public class DashboardSteps : BaseSteps
     public WidgetComponent? GetWidgetByName(string widgetName)
     {
         var widgetList = _dashboardPage.GetVisibleWidgets();
-
         foreach (var widget in widgetList)
         {
             try
@@ -130,12 +151,13 @@ public class DashboardSteps : BaseSteps
             }
             catch (NoSuchElementException)
             {
-                Logger.LogInformation("Widget '{WidgetName}' not found in the list as a visible widget.", widgetName);
+                Logger.LogInformation("Widget '{WidgetName}' not found in the list.", widgetName);
             }
         }
         return null;
     }
 
+    [AllureStep("Move widget '{widgetName}' with offset {offset} direction {movement}")]
     public void MoveWidget(string widgetName, int? offset, Movement movement)
     {
         var widget = GetWidgetByName(widgetName);

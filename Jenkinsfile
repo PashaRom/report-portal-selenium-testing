@@ -56,11 +56,37 @@ pipeline {
                 sh 'dotnet --version'
             }
         }
-
+        
         stage('Restore') {
             steps {
                 dir("${env.PROJECT_DIR}") {
                     sh 'dotnet restore'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    dir("${env.PROJECT_DIR}") {
+                        withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                            sh """
+                            dotnet tool install --global dotnet-sonarscanner || true
+                            export PATH="$PATH:/root/.dotnet/tools"
+
+                            dotnet sonarscanner begin \\
+                                /k:"selenium-framework" \\
+
+                                /d:sonar.projectName="Selenium Framework" \\
+                                /d:sonar.projectVersion="1.0"
+
+                            dotnet build --no-restore
+
+                            dotnet sonarscanner end \\
+                                /d:sonar.login="${SONAR_TOKEN}"
+                            """
+                        }
+                    }
                 }
             }
         }
