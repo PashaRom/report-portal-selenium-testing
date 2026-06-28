@@ -1,5 +1,3 @@
-using Allure.Net.Commons;
-using Allure.NUnit.Attributes;
 using Business.Components;
 using Business.Pages;
 using Core.DI;
@@ -11,6 +9,8 @@ using OpenQA.Selenium;
 using Core.Base;
 using Microsoft.Extensions.Logging;
 using Core.Enum;
+using Allure.NUnit.Attributes;
+using ReportPortal.Shared;
 
 namespace Business.Steps;
 
@@ -57,6 +57,8 @@ public class DashboardSteps : BaseSteps
     [AllureStep("Create dashboard with name '{name}'")]
     public void CreateDashboardWithName(string name)
     {
+        Logger.LogInformation($"Create a dashboard with name: {name}");
+
         var dasboardUrlPattern = @"dashboard/(\d+)";
         _context.SetCreatedDashboardName(name);
         OpenAddDialog();

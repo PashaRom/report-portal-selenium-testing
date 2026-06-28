@@ -35,8 +35,8 @@ public abstract class BaseTest
     {
         if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
         {
-            ScreenshotUtil.TryAttachScreenshot();
-            Logger.LogInformation("[BaseTest] Screenshot attached to Allure report");
+            ScreenshotUtil.TryAttachScreenshotToAllReports();
+            Logger.LogInformation("[BaseTest] Screenshot attached to Allure report and Report Portal");
         }
 
         ServiceLocator.GetService<IDriverManager>().Quit();

@@ -81,6 +81,8 @@ public static class ServiceLocator
             {
                 builder.AddProvider(new FileLoggerProvider(logSettings.FilePath));
             }
+
+            builder.AddProvider(new ReportPortalLoggerProvider());
         });
 
         _additionalRegistrations?.Invoke(services);

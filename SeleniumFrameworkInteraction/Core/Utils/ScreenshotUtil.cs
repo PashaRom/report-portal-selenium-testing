@@ -3,6 +3,7 @@ using Core.DI;
 using Core.Drivers;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
+using ReportPortal.Shared;
 
 namespace Core.Utils;
 
@@ -93,6 +94,42 @@ public static class ScreenshotUtil
         catch (Exception ex)
         {
             Logger.LogDebug("[ScreenshotUtil] Could not restore element style: {Error}", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Takes a full-page screenshot, highlights the last tracked element with a red border
+    /// (if still available in the DOM), and attaches the image to both Allure and ReportPortal reports.
+    /// </summary>
+    public static void TryAttachScreenshotToAllReports()
+    {
+        try
+        {
+            var driver = ServiceLocator.GetService<IDriverManager>().Current;
+
+            if (driver is not ITakesScreenshot screenshotDriver)
+            {
+                return;
+            }
+
+            TryHighlightLastElement(driver);
+            var bytes = screenshotDriver.GetScreenshot().AsByteArray;
+            TryRestoreLastElement(driver);
+
+            // Allure
+            AllureApi.AddAttachment("Screenshot on Failure", "image/png", bytes, ".png");
+            Logger.LogInformation("[ScreenshotUtil] Screenshot attached to Allure report");
+
+            // ReportPortal
+            if (Context.Current != null)
+            {
+                Context.Current.Log.Error("Screenshot on Failure", "image/png", bytes);
+                Logger.LogInformation("[ScreenshotUtil] Screenshot attached to ReportPortal");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "[ScreenshotUtil] Could not take screenshot on test failure");
         }
     }
 }
