@@ -71,6 +71,7 @@ pipeline {
                     dir("${env.PROJECT_DIR}") {
                         withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
                             sh '''                            
+                            
                             dotnet new tool-manifest || true
                             dotnet tool install dotnet-sonarscanner || true
                             dotnet tool restore
@@ -78,12 +79,13 @@ pipeline {
                             dotnet tool run dotnet-sonarscanner begin \
                                 /k:"selenium-framework" \
                                 /d:sonar.login="$SONAR_TOKEN" \
-                                /d:sonar.projectName="Selenium Framework"
+                                /n:"Selenium Framework"
 
                             dotnet build --no-restore
 
                             dotnet tool run dotnet-sonarscanner end \
                                 /d:sonar.login="$SONAR_TOKEN"
+
                             '''
 
                         }
