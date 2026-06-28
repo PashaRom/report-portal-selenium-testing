@@ -106,11 +106,12 @@ pipeline {
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
-                                            ALLURE_RESULTS=${env.ALLURE_DIR}/${b} \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_DIR}/${b} \\
                                                 --filter "${params.TEST_FILTER}" \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
+                                            
+                                            cp -r bin/Debug/net8.0/allure-results/. ${env.ALLURE_DIR}/${b}/
                                             """
                                         }
                                     }
@@ -124,28 +125,15 @@ pipeline {
             }
         }
 
-        stage('Check Allure results') {
-            steps {
-                sh '''
-                echo "=== Find ALL allure result files ==="
-                find /var/jenkins_home/workspace/ui-tests-pipeline -name "*-result.json" 2>/dev/null
-
-                echo "=== Find ALL allure-results dirs ==="
-                find /var/jenkins_home/workspace/ui-tests-pipeline -type d -name "allure-results" 2>/dev/null
-
-                echo "=== allureConfig in bin ==="
-                cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/allureConfig.json
-                '''
-            }
-        }
-
         stage('Publish Allure') {
             steps {
                 script {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Chrome"],
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Edge"],
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Firefox"]
                         ]
                     ])
                 }
