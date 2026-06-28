@@ -14,6 +14,18 @@ pipeline {
         booleanParam(name: 'CHROME',  defaultValue: true,  description: 'Run Chrome')
         booleanParam(name: 'EDGE',    defaultValue: false, description: 'Run Edge')
         booleanParam(name: 'FIREFOX', defaultValue: false, description: 'Run Firefox')
+        
+        choice(
+            name: 'HEADLESS_MODE',
+            choices: ['HEADLESS', 'NON_HEADLESS'],
+            description: 'Browser mode'
+        )
+
+        string(
+            name: 'THREADS',
+            defaultValue: '3',
+            description: 'Number of parallel test threads'
+        )
 
         string(
             name: 'TEST_FILTER',
@@ -91,10 +103,12 @@ pipeline {
                                             BROWSERS=${b} \\
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
+                                            DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_RESULTS}/${b} \\
-                                                --filter "${params.TEST_FILTER}"
+                                                --filter "${params.TEST_FILTER}" \\
+                                                -- NUnit.NumberOfTestWorkers=${params.THREADS}
                                             """
                                         }
                                     }
