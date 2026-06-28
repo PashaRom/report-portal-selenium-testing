@@ -74,6 +74,8 @@ pipeline {
                             dotnet tool install --global dotnet-sonarscanner || true
                             export PATH="$PATH:/root/.dotnet/tools"
 
+                            chmod +x /root/.dotnet/tools/dotnet-sonarscanner
+
                             dotnet-sonarscanner begin \\
                                 /k:"selenium-framework" \\
 
