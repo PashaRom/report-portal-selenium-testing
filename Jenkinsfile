@@ -98,25 +98,16 @@ pipeline {
                                     dir("${env.PROJECT_DIR}/UITests") {
                                         withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
                                             sh """
-                                            rm -rf ${env.WORKSPACE}/${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/${b}
-                                            mkdir -p ${env.WORKSPACE}/${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/${b}
-
                                             BROWSERS=${b} \\
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
-                                            ALLURE_OUTPUT_DIRECTORY=${env.WORKSPACE}/${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/${b} \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_DIR}/${b} \\
                                                 --filter "${params.TEST_FILTER}" \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
-
-                                            echo "=== After test: ${b} ==="
-ls -la ${env.WORKSPACE}/${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/${b}/
-echo "=== bin/allure-results ==="
-ls -la bin/Debug/net8.0/allure-results/ 2>/dev/null || echo "NOT FOUND"
                                             """
                                         }
                                     }
@@ -130,22 +121,13 @@ ls -la bin/Debug/net8.0/allure-results/ 2>/dev/null || echo "NOT FOUND"
             }
         }
 
-        stage('Check Allure version') {
-            steps {
-                sh 'cat SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/Allure.NUnit.dll | strings | grep -i "version" | head -5 || true'
-                sh 'find /var/jenkins_home -name "*.deps.json" -path "*/UITests/*" | xargs grep -l "Allure" | head -1 | xargs cat | grep -A2 "Allure.NUnit"'
-            }
-        }
-
         stage('Publish Allure') {
             steps {
                 script {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Chrome"],
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Edge"],
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/Firefox"]
+                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
                         ]
                     ])
                 }
