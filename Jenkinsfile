@@ -104,6 +104,7 @@ pipeline {
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
+                                            ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_RESULTS}/${b} \\
