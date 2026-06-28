@@ -123,6 +123,19 @@ pipeline {
             }
         }
 
+        stage('Check Allure results') {
+            steps {
+                sh '''
+                echo "=== Chrome ==="
+                ls -la SeleniumFrameworkInteraction/UITests/allure-results/Chrome/ || echo "EMPTY or NOT FOUND"
+                echo "=== Edge ==="
+                ls -la SeleniumFrameworkInteraction/UITests/allure-results/Edge/ || echo "EMPTY or NOT FOUND"
+                echo "=== Firefox ==="
+                ls -la SeleniumFrameworkInteraction/UITests/allure-results/Firefox/ || echo "EMPTY or NOT FOUND"
+                '''
+            }
+        }
+
         stage('Publish Allure') {
             steps {
                 script {
