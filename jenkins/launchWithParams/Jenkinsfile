@@ -1,3 +1,5 @@
+@Library('../jenkins-shared-library') _
+
 pipeline {
     agent any
 
@@ -32,6 +34,12 @@ pipeline {
             defaultValue: 'FullyQualifiedName~Cancel_ClosesDialog',
             description: 'dotnet test filter (например: TestCategory=dashboard_crud)'
         )
+
+        string(
+            name: 'GIT_BRANCH',
+            defaultValue: 'module-8.1',
+            description: 'Git branch to build'
+        )
     }
 
     
@@ -43,27 +51,20 @@ pipeline {
             REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'module-8.1',
-                        url: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
-            }
-        }
+    stages { 
 
-        stage('Check .NET') {
-            steps {
-                sh 'dotnet --version'
-            }
-        }
-        
-        stage('Restore') {
-            steps {
-                dir("${env.PROJECT_DIR}") {
-                    sh 'dotnet restore'
+        stage('Setup') {
+            steps{
+                script{
+                    gitCheckout(params.GIT_BRANCH, 'https://github.com/PashaRom/report-portal-selenium-testing.git')
+
+                    dotnetVersion()
+
+                    dotnetRestore("${env.PROJECT_DIR}")
                 }
             }
         }
+        
 
         stage('SonarQube Analysis') {
             steps {
@@ -89,7 +90,6 @@ pipeline {
                                 /d:sonar.login="$SONAR_TOKEN"
 
                             '''
-
                         }
                     }
                 }

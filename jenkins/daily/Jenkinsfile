@@ -11,15 +11,10 @@ pipeline {
     
     triggers {
         cron('0 17 * * *')
-    }
-
-    
+    }    
     
     parameters {
-        booleanParam(name: 'CHROME',  defaultValue: true,  description: 'Run Chrome')
-        booleanParam(name: 'EDGE',    defaultValue: false, description: 'Run Edge')
-        booleanParam(name: 'FIREFOX', defaultValue: false, description: 'Run Firefox')
-        
+
         choice(
             name: 'HEADLESS_MODE',
             choices: ['HEADLESS', 'NON_HEADLESS'],
