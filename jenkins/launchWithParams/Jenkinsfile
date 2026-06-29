@@ -1,4 +1,10 @@
-@Library('../jenkins-shared-library') _
+library(
+    identifier: 'jenkins-shared-library@module-8.1',
+    retriever: modernSCM([
+        $class: 'GitSCMSource',
+        remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
+    ])
+)
 
 pipeline {
     agent any
