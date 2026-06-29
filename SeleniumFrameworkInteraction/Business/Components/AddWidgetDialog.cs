@@ -110,9 +110,11 @@ public class AddWidgetDialog : BaseComponent
             var el = WaitHelper.DefaultWait(FirstFilterRadio);
             ActionHelper.JsClick(el, FirstFilterRadio.Name);
         }
-        catch
+        catch(Exception ex)
         {
-            Logger.LogWarning("[{Component}] No filter radio buttons found — proceeding without filter selection", Name);
+            Logger.LogWarning(
+                "[{Component}] No filter radio buttons found — proceeding without filter selection. Thr reason is: {Message}",
+                Name, ex.Message);
         }
     }
 }

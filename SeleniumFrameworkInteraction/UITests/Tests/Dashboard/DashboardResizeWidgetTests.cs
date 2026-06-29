@@ -17,7 +17,7 @@ namespace UITests.Tests.Dashboard
         [Description("Default user creates a dashboard with 5 available widgets and resize ones")]
         public void ResizeWidget_ResizeWidgetAndCheckSize()
         {
-            var allWidgets = WidgetTypesProvider.All.ToList();
+            var allWidgets = WidgetTypesProvider.GetAllWidgets().ToList();
             var widgetOrder = 1;
             var resizeValue = 80;
 

@@ -32,12 +32,12 @@ public class UserApiClient : IUserApiClient
         return await _rpApiClient.ExecuteAsync<UserListResponse>(request, cancellationToken);
     }
 
-    public async Task CreateUserAsync(
+    public async Task<UserResponse> CreateUserAsync(
         string token,
-        CreateUserRq rq,
+        CreateUserRequest request,
         CancellationToken cancellationToken = default)
     {
-        var request = new ApiRequest
+        var apiRequest = new ApiRequest
         {
             Method = HttpMethod.Post,
             RelativeUrl = "api/users",
@@ -45,20 +45,20 @@ public class UserApiClient : IUserApiClient
             {
                 ["Authorization"] = $"Bearer {token}"
             },
-            Content = new StringContent(JsonSerializer.Serialize(rq), Encoding.UTF8, "application/json"),
+            Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"),
             EnsureSuccessStatusCode = false
         };
 
-        await _rpApiClient.ExecuteAsync<EmptyResponse>(request, cancellationToken);
+       return await _rpApiClient.ExecuteAsync<UserResponse>(apiRequest, cancellationToken);
     }
 
-    public async Task AssignToProjectAsync(
+    public async Task<InfoResponse> AssignToProjectAsync(
         string token,
         string projectName,
         Dictionary<string, string> userRoles,
         CancellationToken cancellationToken = default)
     {
-        var rq = new AssignUsersRq { UserNames = userRoles };
+        var rq = new AssignUsersRequest { UserNames = userRoles };
         var request = new ApiRequest
         {
             Method = HttpMethod.Put,
@@ -71,6 +71,6 @@ public class UserApiClient : IUserApiClient
             EnsureSuccessStatusCode = false
         };
 
-        await _rpApiClient.ExecuteAsync<EmptyResponse>(request, cancellationToken);
+        return await _rpApiClient.ExecuteAsync<InfoResponse>(request, cancellationToken);
     }
 }

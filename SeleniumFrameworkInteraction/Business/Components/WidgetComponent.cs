@@ -31,10 +31,7 @@ namespace Business.Components
         public void Resize(int xOffset, int yOffset) =>
             ActionHelper.Resize(ResizeHandle.Element, Name, xOffset, yOffset);
 
-        public void DragAndDropTo(int? offset, Movement movement)
-        {
-            var sourceLocation = Root.Location;
+        public void DragAndDropTo(int? offset, Movement movement) =>
             ActionHelper.DragAndDropByOffset(HeaderPanel.Element, TitleText, offset, movement);
-        }
     }
 }

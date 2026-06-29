@@ -14,7 +14,7 @@ namespace UITests.Tests.Dashboard
         private readonly List<string> _widgets;
         public DashboardMoveWidgetTests(BrowserType browser) : base(browser)
         {
-            _widgets = WidgetTypesProvider.All.Take(3).ToList();
+            _widgets = WidgetTypesProvider.GetAllWidgets().Take(3).ToList();
         }
 
         [SetUp]

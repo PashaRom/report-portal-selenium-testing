@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Business.Model.API;
 
-public class CreateUserRq
+public class CreateUserRequest
 {
     [JsonPropertyName("login")]
     public string Login { get; set; } = string.Empty;

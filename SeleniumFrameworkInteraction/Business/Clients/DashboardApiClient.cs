@@ -48,6 +48,6 @@ public class DashboardApiClient : IDashboardApiClient
             EnsureSuccessStatusCode = false
         };
 
-        await _rpApiClient.ExecuteAsync<EmptyResponse>(request, cancellationToken);
+        await _rpApiClient.ExecuteAsync<InfoResponse>(request, cancellationToken);
     }
 }

@@ -13,7 +13,7 @@ public static class WidgetTypesProvider
     /// <summary>
     /// UI labels in the active language — use these to interact with and verify the UI.
     /// </summary>
-    public static IReadOnlyList<string> All => _map.Value.Values.ToList();
+    public static IReadOnlyList<string> GetAllWidgets() => _map.Value.Values.ToList();
 
     /// <summary>
     /// Full key → label map. Key is language-neutral; value is the UI text in the active locale.

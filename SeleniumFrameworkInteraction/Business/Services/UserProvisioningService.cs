@@ -84,7 +84,7 @@ public class UserProvisioningService
         {
             _logger.LogInformation("Creating missing user '{Login}'.", user.Login);
 
-            await _userApiClient.CreateUserAsync(token, new CreateUserRq
+            await _userApiClient.CreateUserAsync(token, new CreateUserRequest
             {
                 Login = user.Login,
                 Password = user.Password,

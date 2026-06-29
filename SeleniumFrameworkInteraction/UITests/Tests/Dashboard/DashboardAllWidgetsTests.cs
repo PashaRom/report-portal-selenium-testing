@@ -27,7 +27,7 @@ public class DashboardAllWidgetsTests : DashboardTestBase
     [Description("Default user creates a dashboard with all available widgets and they persist after re-login")]
     public void AllWidgets_AreVisibleAndPersistAfterReLogin()
     {
-        var allWidgets = WidgetTypesProvider.All;
+        var allWidgets = WidgetTypesProvider.GetAllWidgets();
 
         foreach (var widgetType in allWidgets)
             _dashboard.AddWidget(widgetType, widgetType);

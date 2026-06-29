@@ -8,12 +8,12 @@ public interface IUserApiClient
         string token,
         CancellationToken cancellationToken = default);
 
-    Task CreateUserAsync(
+    Task<UserResponse> CreateUserAsync(
         string token,
-        CreateUserRq request,
+        CreateUserRequest request,
         CancellationToken cancellationToken = default);
 
-    Task AssignToProjectAsync(
+    Task<InfoResponse> AssignToProjectAsync(
         string token,
         string projectName,
         Dictionary<string, string> userRoles,
