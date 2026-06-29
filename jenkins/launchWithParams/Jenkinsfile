@@ -118,7 +118,7 @@ pipeline {
         stage('Test (Selenoid)') {
             steps {
                 script {
-                    sh "rm -rf ${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}"
+                    /*sh "rm -rf ${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/${env.ALLURE_DIR}"*/
                     
                     def browsers = []
 
@@ -171,7 +171,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}"]
+                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/${env.ALLURE_DIR}"]
                         ]
                     ])
                 }
