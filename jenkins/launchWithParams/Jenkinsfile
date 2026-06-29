@@ -118,6 +118,8 @@ pipeline {
         stage('Test (Selenoid)') {
             steps {
                 script {
+                    sh "rm -rf ${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}"
+                    
                     def browsers = []
 
                     if (params.CHROME)  browsers.add('Chrome')
@@ -169,7 +171,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}"]
                         ]
                     ])
                 }
@@ -179,7 +181,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/allure-results/**'
+            archiveArtifacts artifacts: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/**"
         }
     }
 }
