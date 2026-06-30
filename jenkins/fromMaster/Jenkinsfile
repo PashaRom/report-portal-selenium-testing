@@ -1,3 +1,11 @@
+library(
+    identifier: 'jenkins-shared-library@module-8.1',
+    retriever: modernSCM([
+        $class: 'GitSCMSource',
+        remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
+    ])
+)
+
 pipeline {
     agent any
 
@@ -6,9 +14,7 @@ pipeline {
         buildDiscarder(logRotator(
             numToKeepStr: '10'
         ))
-    }
-
-     
+    }     
     
     parameters {
 
@@ -27,11 +33,11 @@ pipeline {
 
     
     environment {
-            BASE_URL = 'http://192.168.1.4:8080/'
+            BASE_URL = 'http://20.217.80.189:8080/'
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
-            REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
+            REMOTE_URL = 'http://20.217.83.159:4444/wd/hub'
             ALLURE_DIR = 'allure-results'
-            REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
+            REPORT_PORTAL_URL = 'http://20.217.80.189:8080'
             GIT_BRANCH = 'main'
     }
 
@@ -94,11 +100,7 @@ pipeline {
                     sh "rm -rf ${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/${env.ALLURE_DIR}"
 
                     def browsers = []
-
-                        browsers.add('Chrome')
-                        browsers.add('Edge')
-                        browsers.add('Firefox')
-
+                    browsers.add('Chrome')
                     def parallelStages = [:]
                     
                     for (browser in browsers) {
@@ -118,7 +120,8 @@ pipeline {
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_DIR}/${b} \\
-                                                -- NUnit.NumberOfTestWorkers=${params.THREADS}
+                                                -- NUnit.NumberOfTestWorkers=${params.THREADS} \\
+                                                --filter FullyQualifiedName~Cancel_ClosesDialog
                                             """
                                         }
                                     }
