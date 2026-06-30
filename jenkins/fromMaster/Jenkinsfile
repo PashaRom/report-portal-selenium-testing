@@ -1,11 +1,3 @@
-library(
-    identifier: 'jenkins-shared-library@module-8.1',
-    retriever: modernSCM([
-        $class: 'GitSCMSource',
-        remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
-    ])
-)
-
 pipeline {
     agent any
 
@@ -16,10 +8,7 @@ pipeline {
         ))
     }
 
-    
-    triggers {
-        cron('0 17 * * *')
-    }    
+     
     
     parameters {
 
@@ -46,15 +35,7 @@ pipeline {
     }
 
     stages {
-
-        stage('Launch Job'){
-            steps{
-                script{
-                    notifyTeams("🚀 Tests has been started")
-                }
-            }
-        }
-
+        
         stage('Setup') {
             steps{
                 script{
@@ -91,6 +72,7 @@ pipeline {
                                 /d:sonar.login="$SONAR_TOKEN"
 
                             '''
+
                         }
                     }
                 }
@@ -166,18 +148,6 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/**'
-        }
-        
-        success {
-            notifyTeams("✅ Tests passed")
-        }
-
-        failure {
-            notifyTeams("❌ Tests failed")
-        }
-
-        unstable {
-            notifyTeams("⚠️ Tests unstable")
         }
     }
 }
