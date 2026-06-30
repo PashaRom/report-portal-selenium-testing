@@ -156,7 +156,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/**"]
                         ]
                     ])
                 }
