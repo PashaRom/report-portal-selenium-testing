@@ -1,0 +1,153 @@
+pipeline {
+    agent any
+
+    
+    options {
+        buildDiscarder(logRotator(
+            numToKeepStr: '10'
+        ))
+    }
+
+    
+    triggers {
+        cron('0 17 * * *')
+    }    
+    
+    parameters {
+
+        choice(
+            name: 'HEADLESS_MODE',
+            choices: ['HEADLESS', 'NON_HEADLESS'],
+            description: 'Browser mode'
+        )
+
+        string(
+            name: 'THREADS',
+            defaultValue: '3',
+            description: 'Number of parallel test threads'
+        )
+    }
+
+    
+    environment {
+            BASE_URL = 'http://192.168.1.4:8080/'
+            PROJECT_DIR = 'SeleniumFrameworkInteraction'
+            REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
+            ALLURE_DIR = 'allure-results'
+            REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
+    }
+
+    stages {
+        stage('Setup') {
+            steps{
+                script{
+                    gitCheckout(params.GIT_BRANCH, 'https://github.com/PashaRom/report-portal-selenium-testing.git')
+
+                    dotnetVersion()
+
+                    dotnetRestore("${env.PROJECT_DIR}")
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    dir("${env.PROJECT_DIR}") {
+                        withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                            sh '''                            
+                            
+                            dotnet new tool-manifest || true
+                            dotnet tool install dotnet-sonarscanner || true
+                            dotnet tool restore
+
+                            dotnet tool run dotnet-sonarscanner begin \
+                                /k:"selenium-framework" \
+                                /d:sonar.login="$SONAR_TOKEN" \
+                                /n:"Selenium Framework" \
+                                /d:sonar.tests=UITests \
+                                /d:sonar.sources=Core,Business
+
+                            dotnet build --no-restore
+
+                            dotnet tool run dotnet-sonarscanner end \
+                                /d:sonar.login="$SONAR_TOKEN"
+
+                            '''
+
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
+                }
+            }
+        }
+        
+        stage('Test (Selenoid)') {
+            steps {
+                script {
+                    def browsers = []
+
+                        browsers.add('Chrome')
+                        browsers.add('Edge')
+                        browsers.add('Firefox')
+
+                    def parallelStages = [:]
+                    
+                    for (browser in browsers) {
+                        def b = browser
+                      
+                        parallelStages[b] = {
+                            stage("Run on ${b}") {
+                                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                                    dir("${env.PROJECT_DIR}/UITests") {
+                                        withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
+                                            sh """
+                                            BROWSERS=${b} \\
+                                            BaseUrl=${env.BASE_URL} \\
+                                            DriverSettings__Remote=true \\
+                                            DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
+                                            ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
+                                            REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
+                                            dotnet test --no-build \\
+                                                --results-directory ${env.ALLURE_DIR}/${b} \\
+                                                -- NUnit.NumberOfTestWorkers=${params.THREADS}
+                                            """
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    parallel parallelStages
+                }
+            }
+        }
+
+        stage('Publish Allure') {
+            steps {
+                script {
+                    step([
+                        $class: 'AllureReportPublisher',
+                        results: [
+                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
+                        ]
+                    ])
+                }
+            }
+        }
+
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'SeleniumFrameworkInteraction/UITests/bin/Debug/net8.0/allure-results/**'
+        }
+    }
+}

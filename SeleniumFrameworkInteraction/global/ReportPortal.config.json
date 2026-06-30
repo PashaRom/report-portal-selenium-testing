@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/reportportal/agent-net-nunit/master/src/ReportPortal.NUnitExtension/ReportPortal.config.schema",
+  "enabled": true,
+  "server": {
+    "url": "http://192.168.1.4:8080/",
+    "project": "report_portal"
+  },
+  "launch": {
+    "name": "RP UI NUnit",
+    "description": "Report Portal Project ",
+    "debugMode": false,
+    "attributes": []
+  }
+}
