@@ -43,6 +43,7 @@ pipeline {
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
             ALLURE_DIR = 'allure-results'
             REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
+            BUILD_BRANCH = 'module-8.1'
     }
 
     stages {
@@ -58,7 +59,7 @@ pipeline {
         stage('Setup') {
             steps{
                 script{
-                    gitCheckout(params.GIT_BRANCH, 'https://github.com/PashaRom/report-portal-selenium-testing.git')
+                    gitCheckout(env.BUILD_BRANCH, 'https://github.com/PashaRom/report-portal-selenium-testing.git')
 
                     dotnetVersion()
 

@@ -32,7 +32,7 @@ pipeline {
             REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
             ALLURE_DIR = 'allure-results'
             REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
-            GIT_BRANCH = 'module-8.1'
+            GIT_BRANCH = 'main'
     }
 
     stages {
