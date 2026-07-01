@@ -28,6 +28,7 @@ public class DashboardListPage : BasePage
     public void OpenAddDialog()
     {
         Navigate();
+        WaitHelper.Until(d => AddNewDashboardBtn.IsClickable);
         AddNewDashboardBtn.Click();
         WaitHelper.Until(d => AddDashboardDialog.IsOpen());
     }

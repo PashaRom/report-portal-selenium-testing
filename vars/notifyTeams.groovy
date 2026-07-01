@@ -1,12 +1,29 @@
 def call(String status) {
+
+    def branch = sh(
+        script: 'git rev-parse --abbrev-ref HEAD',
+        returnStdout: true
+    ).trim()
+
+    def commit = sh(
+        script: 'git rev-parse --short HEAD',
+        returnStdout: true
+    ).trim()
+
+    def author = sh(
+        script: 'git log -1 --pretty=format:"%an"',
+        returnStdout: true
+    ).trim()
+
+
     def message = """
         ${status}
 
         Job: ${env.JOB_NAME}
         Build: #${env.BUILD_NUMBER}
-        Branch: ${env.BRANCH_NAME}
-        Commit: ${env.GIT_COMMIT.take(7)}
-        Author: ${env.GIT_AUTHOR_NAME}
+        Branch: ${branch}
+        Commit: ${commit}
+        Author: ${author}
         ${env.BUILD_URL}
     """.trim()
 

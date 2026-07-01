@@ -20,7 +20,26 @@ public class Button : WrapperElement
     public void Click()
     {
         LogAction($"Clicking on Button element {Name}");
-        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5)?.Click();
+        //WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5)?.Click();
+
+        WaitHelper.Until<bool>(d =>
+        {
+            try
+            {
+                var element = WaitHelper.DefaultWait(this);
+
+                if (element == null)
+                    return false;
+
+                element.Click();
+                return true;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+        }, timeout: Timeouts.Sec2, polling: Timeouts.Ms500);
+
         LogAction($"Clicked on Button element {Name} successfully");
     }
 
