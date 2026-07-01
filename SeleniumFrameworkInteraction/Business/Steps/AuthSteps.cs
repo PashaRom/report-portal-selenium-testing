@@ -39,6 +39,10 @@ public class AuthSteps : BaseSteps
         var user = TestDataProvider.GetUser(loginAlias);
         Logger.LogInformation("[AuthSteps] LoginViaApi: obtaining token for '{Login}'", user.Login);
         var token = _authClient.GetTokenAsync(user.Login, user.Password).GetAwaiter().GetResult();
+        if (token == null || string.IsNullOrEmpty(token.AccessToken))
+        {
+            throw new InvalidOperationException($"Failed to obtain token for user '{user.Login}'");
+        }
         var driver = ServiceLocator.GetService<IDriverManager>().Current;
 
         driver.Navigate().GoToUrl(_config.BaseUrl + "ui/");
@@ -52,6 +56,7 @@ public class AuthSteps : BaseSteps
         ActionHelper.JsClearBrowserStorage();
 
         var tokenJson = JsonSerializer.Serialize(new { type = "Bearer", value = token.AccessToken });
+
         ActionHelper.JsSetLocalStorageItem("token", tokenJson);
         ActionHelper.JsSetLocalStorageItem("applicationSettings", "{\"shouldRequestOnboarding\":false}");
 
