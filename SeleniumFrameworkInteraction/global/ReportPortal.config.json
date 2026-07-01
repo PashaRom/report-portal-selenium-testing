@@ -3,14 +3,15 @@
   "enabled": true,
   "server": {
     "url": "http://20.217.80.189:8080/",
-    "project": "report_portal"
+    "project": "report_portal",
+    "apiKey": "__API_KEY__"
   },
   "launch": {
     "name": "RP UI NUnit",
     "description": "Report Portal Project ",
     "debugMode": false,
     "attributes": []
-  },  
+  },
   "logging": {
     "level": "Trace"
   }

@@ -131,17 +131,9 @@ pipeline {
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
-                                            REPORTPORTAL_SERVER_APIKEY=\$RP_KEY
 
+                                            sed -i "s|__API_KEY__|\$RP_KEY|g" ReportPortal.config.json
 
-export Server__ApiKey=\$RP_KEY
-
-    env | sort | grep -i api
-
-
-echo "====== RP ======" 
-env | grep -i report 
-echo "===============" 
 
 
                                             dotnet test --no-build \\
