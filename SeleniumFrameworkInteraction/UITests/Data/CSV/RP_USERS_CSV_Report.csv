@@ -1,6 +1,6 @@
 Full name,Type,Login,Email,Last login,Projects and Roles,Password
 tester,INTERNAL,default,defaultemail@domain.com,2026-06-03T08:13:37.346Z,"report_portal - PROJECT_MANAGER, default_personal - PROJECT_MANAGER",1q2w3e
-tester,INTERNAL,superadmin,superadminemail@domain.com,2026-06-03T08:14:24.184Z,"report_portal - PROJECT_MANAGER, superadmin_personal - PROJECT_MANAGER",Qwerty789
+tester,INTERNAL,superadmin,superadminemail@domain.com,2026-06-03T08:14:24.184Z,"report_portal - PROJECT_MANAGER, superadmin_personal - PROJECT_MANAGER",Qwerty789-
 Customer,INTERNAL,customer,customer@test.com,2026-06-03T08:19:09.61Z,"report_portal - CUSTOMER, customer_personal - PROJECT_MANAGER",Customer@qwerty789
 Operator,INTERNAL,operator,operator@test.com,2026-06-03T08:20:36.372Z,"report_portal - OPERATOR, operator_personal - PROJECT_MANAGER",Operator@qwerty789
 Member,INTERNAL,member,member@test.com,2026-06-03T08:23:03.785Z,"report_portal - MEMBER, member_personal - PROJECT_MANAGER",Member@qwerty789
