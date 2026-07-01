@@ -3,6 +3,7 @@ using Core.Drivers;
 using Core.Elements;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
+using OpenQA.Selenium.DevTools.V147.Debugger;
 using OpenQA.Selenium.Support.UI;
 
 namespace Core.Helpers;
@@ -68,7 +69,7 @@ public static class WaitHelper
     /// <param name="polling">Polling interval. Default is 100 ms.</param>
     /// <param name="ignoredExceptions">Exception types to ignore. Defaults to common transient exceptions.</param>
     /// <param name="driver">WebDriver instance. Defaults to the current driver.</param>
-    public static IWebElement DefaultWait(
+    public static IWebElement? DefaultWait(
         IWrapperElement element,
         TimeSpan? timeout = null,
         TimeSpan? polling = null,
@@ -110,6 +111,7 @@ public static class WaitHelper
         catch (Exception ex)
         {
             Logger.LogWarning(ex,"[WaitHelper.DefaultWait] Element '{Name}' did not become ready", element.Name);
+            return null;
         }
     }
 
