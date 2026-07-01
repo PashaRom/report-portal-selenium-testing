@@ -132,7 +132,7 @@ pipeline {
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
 
-                                            sed -i "s|__API_KEY__|\$RP_KEY|g" ReportPortal.config.json
+                                            sed -i "s|__API_KEY__|\$RP_KEY|g" ${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/ReportPortal.config.json
 
 
 
