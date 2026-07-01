@@ -36,7 +36,10 @@ pipeline {
             BASE_URL = 'http://20.217.80.189:8080/'
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
             REMOTE_URL = 'http://20.217.83.159:4444/wd/hub'
-            ALLURE_DIR = 'allure-results'
+    /*         ALLURE_DIR = 'allure-results'*/
+    
+            TEST_RESULTS_DIR = 'test-results'
+            ALLURE_RESULTS_DIR = 'allure-results'
             REPORT_PORTAL_URL = 'http://20.217.80.189:8080'
     }
 
@@ -104,7 +107,11 @@ pipeline {
                     
                     for (browser in browsers) {
                         def b = browser
-                      
+                        
+                        sh """
+                        rm -rf ${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS_DIR}
+                        mkdir -p ${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS_DIR}
+                        """                      
                         parallelStages[b] = {
                             stage("Run on ${b}") {
                                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
@@ -118,7 +125,7 @@ pipeline {
                                             ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
-                                                --results-directory ${env.ALLURE_DIR}/${b} \\
+                                                --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
                                             """
                                         }
@@ -139,7 +146,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: '${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results']
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS_DIR}"]
                         ]
                     ])
                 }
@@ -149,7 +156,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: '${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/**'
+            archiveArtifacts artifacts: '${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS_DIR}/**'
         }
     }
 }
