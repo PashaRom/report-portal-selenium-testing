@@ -57,7 +57,7 @@ public class DashboardSteps : BaseSteps
     [AllureStep("Create dashboard with name '{name}'")]
     public void CreateDashboardWithName(string name)
     {
-        Logger.LogInformation($"Create a dashboard with name: {name}");
+        Logger.LogInformation("Create a dashboard with name: {Name}", name);
 
         var dasboardUrlPattern = @"dashboard/(\d+)";
         _context.SetCreatedDashboardName(name);
@@ -135,7 +135,7 @@ public class DashboardSteps : BaseSteps
     {
         var widgetList = _dashboardPage.GetVisibleWidgets();
         var targetWidget = widgetList.FirstOrDefault(e => e.TitleText.Equals(widgetName));
-        ActionHelper.ScrollToElementTop(targetWidget.Element, targetWidget.TitleText);
+        ActionHelper.ScrollToElementTop(targetWidget?.Element, targetWidget?.TitleText);
         targetWidget?.Resize(offsetX, offsetY);
     }
 
@@ -151,9 +151,9 @@ public class DashboardSteps : BaseSteps
                 if (widget.TitleText.Equals(widgetName))
                     return widget;
             }
-            catch (NoSuchElementException)
+            catch (NoSuchElementException ex)
             {
-                Logger.LogInformation("Widget '{WidgetName}' not found in the list.", widgetName);
+                Logger.LogInformation(ex, "Widget '{WidgetName}' not found in the list.", widgetName);
             }
         }
         return null;

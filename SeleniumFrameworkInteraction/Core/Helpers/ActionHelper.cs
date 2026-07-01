@@ -168,7 +168,7 @@ public static class ActionHelper
     /// Scrolls the page until the given element is at the top of the viewport (or as close as possible).
     /// </summary>
 
-    public static void ScrollToElementTop(IWebElement element, string elementName)
+    public static void ScrollToElementTop(IWebElement? element, string? elementName)
     {
         var driver = CurrentDriver;
         var actions = new Actions(driver);

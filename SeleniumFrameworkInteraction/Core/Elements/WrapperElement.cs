@@ -51,7 +51,7 @@ public abstract class WrapperElement : IWrapperElement, IWrapsElement
     /// <summary>Initializes a wrapper from a pre-found IWebElement. Locator is null; re-find on stale is not supported.</summary>
     protected WrapperElement(IWebElement element, string name)
     {
-        if (element == null) throw new ArgumentNullException(nameof(element));
+        ArgumentNullException.ThrowIfNull(element);
         Locator = null;
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Logger = ServiceLocator.GetService<ILoggerFactory>().CreateLogger(GetType().Name);
@@ -68,14 +68,14 @@ public abstract class WrapperElement : IWrapperElement, IWrapsElement
             {
                 return Element.Displayed;
             }
-            catch (StaleElementReferenceException)
+            catch (StaleElementReferenceException ex)
             {
-                Logger.LogDebug("[{ElementType}] {Name}: Stale element while checking IsDisplayed, returning false", GetType().Name, Name);
+                Logger.LogDebug(ex, "[{ElementType}] {Name}: Stale element while checking IsDisplayed, returning false", GetType().Name, Name);
                 return false;
             }
-            catch (NoSuchElementException)
+            catch (NoSuchElementException ex)
             {
-                Logger.LogDebug("[{ElementType}] {Name}: Element not found while checking IsDisplayed, returning false", GetType().Name, Name);
+                Logger.LogDebug(ex, "[{ElementType}] {Name}: Element not found while checking IsDisplayed, returning false", GetType().Name, Name);
                 return false;
             }
         }
@@ -89,14 +89,14 @@ public abstract class WrapperElement : IWrapperElement, IWrapsElement
             {
                 return Element.Enabled;
             }
-            catch (StaleElementReferenceException)
+            catch (StaleElementReferenceException ex)
             {
-                Logger.LogDebug("[{ElementType}] {Name}: Stale element while checking IsEnabled, returning false", GetType().Name, Name);
+                Logger.LogDebug(ex, "[{ElementType}] {Name}: Stale element while checking IsEnabled, returning false", GetType().Name, Name);
                 return false;
             }
-            catch (NoSuchElementException)
+            catch (NoSuchElementException ex)
             {
-                Logger.LogDebug("[{ElementType}] {Name}: Element not found while checking IsEnabled, returning false", GetType().Name, Name);
+                Logger.LogDebug(ex, "[{ElementType}] {Name}: Element not found while checking IsEnabled, returning false", GetType().Name, Name);
                 return false;
             }
         }

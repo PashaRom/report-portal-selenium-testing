@@ -25,7 +25,7 @@ public class AppConfiguration : IAppConfiguration
                 .ToList();
         }
 
-        if(!(driverSettings.Browsers.Count > 0))
+        if(driverSettings.Browsers.Count <= 0)
         {
             driverSettings.Browsers = new List<BrowserType> { BrowserType.Chrome };
         }

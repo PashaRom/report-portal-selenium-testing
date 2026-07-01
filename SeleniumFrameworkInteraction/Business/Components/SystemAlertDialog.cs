@@ -28,9 +28,9 @@ namespace Business.Components
                 {
                     return Root.Displayed;
                 }
-                catch (NoSuchElementException)
+                catch (NoSuchElementException ex)
                 {
-                    Logger.LogInformation("[{Component}] System Alert Dialog is not displayed", Name);
+                    Logger.LogInformation(ex, "[{Component}] System Alert Dialog is not displayed", Name);
                     return false;
                 }
             }

@@ -9,7 +9,7 @@ public class DriverSettings
     /// Each entry creates a separate fixture instance (cross-browser run).
     /// Defaults to Chrome when not configured.
     /// </summary>
-    public List<BrowserType> Browsers { get; set; }
+    public List<BrowserType>? Browsers { get; set; }
 
     public bool Remote { get; set; } = false;
     public string? RemoteUri { get; set; }

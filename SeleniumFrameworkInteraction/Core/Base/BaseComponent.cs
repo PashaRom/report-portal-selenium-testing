@@ -6,8 +6,8 @@ namespace Core.Base;
 public abstract class BaseComponent : BaseApplication
 {
     protected string? Name { get; }
-    private readonly By _rootLocator;
-    private readonly IWebElement _rootElement;
+    private readonly By? _rootLocator;
+    private readonly IWebElement? _rootElement;
 
     protected BaseComponent(string name, By rootLocator) : base()
     {

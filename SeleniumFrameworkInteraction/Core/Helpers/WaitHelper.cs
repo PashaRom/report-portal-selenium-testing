@@ -97,9 +97,9 @@ public static class WaitHelper
                     var el = ctx.FindElement(element.Locator);
                     return el.Displayed && el.Enabled ? el : null;
                 }
-                catch (StaleElementReferenceException)
+                catch (StaleElementReferenceException ex)
                 {
-                    Logger.LogDebug("[WaitHelper.DefaultWait] StaleElementReferenceException for '{Name}', retrying...", element.Name);
+                    Logger.LogDebug(ex, "[WaitHelper.DefaultWait] StaleElementReferenceException for '{Name}', retrying...", element.Name);
                     return null;
                 }
             }, t, p, ignoredExceptions, elementName: element.Name, driver)!;
@@ -110,6 +110,7 @@ public static class WaitHelper
         catch (Exception ex)
         {
             Logger.LogWarning(
+                ex,
                 "[WaitHelper.DefaultWait] Element '{Name}' did not become ready — error={Error}",
                 element.Name, ex.Message);
             throw;

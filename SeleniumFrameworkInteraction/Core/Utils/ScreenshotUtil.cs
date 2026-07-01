@@ -72,7 +72,7 @@ public static class ScreenshotUtil
         }
         catch (Exception ex)
         {
-            Logger.LogDebug("[ScreenshotUtil] Could not highlight element: {Error}", ex.Message);
+            Logger.LogDebug(ex, "[ScreenshotUtil] Could not highlight element");
         }
     }
 
@@ -93,7 +93,7 @@ public static class ScreenshotUtil
         }
         catch (Exception ex)
         {
-            Logger.LogDebug("[ScreenshotUtil] Could not restore element style: {Error}", ex.Message);
+            Logger.LogDebug(ex, "[ScreenshotUtil] Could not restore element style");
         }
     }
 

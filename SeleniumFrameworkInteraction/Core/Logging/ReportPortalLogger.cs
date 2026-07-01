@@ -68,9 +68,10 @@ public class ReportPortalLogger : ILogger
                     break;
             }
         }
-        catch
+        catch(Exception)
         {
-
+            // Intentionally ignored.
+            // Logging failures must never affect test
         }
     }
 

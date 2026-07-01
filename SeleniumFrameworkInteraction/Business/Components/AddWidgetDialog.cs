@@ -113,8 +113,9 @@ public class AddWidgetDialog : BaseComponent
         catch(Exception ex)
         {
             Logger.LogWarning(
-                "[{Component}] No filter radio buttons found — proceeding without filter selection. Thr reason is: {Message}",
-                Name, ex.Message);
+                ex,
+                "[{Component}] No filter radio buttons found — proceeding without filter selection.",
+                Name);
         }
     }
 }

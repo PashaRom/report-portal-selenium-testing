@@ -182,6 +182,6 @@ public class DashboardPage : BasePage
         .Select(e => new WidgetComponent(e))
         .ToList();
 
-    public void MoveWidgetOffset(WidgetComponent widget, int? offset, Movement movement) =>
-        widget.DragAndDropTo(offset, movement);
+    public void MoveWidgetOffset(WidgetComponent? widget, int? offset, Movement movement) =>
+        widget?.DragAndDropTo(offset, movement);
 }
