@@ -59,7 +59,7 @@ pipeline {
         stage('Setup') {
             steps{
                 script{
-                    gitCheckout(env.BUILD_BRANCH, 'https://github.com/PashaRom/report-portal-selenium-testing.git')
+                    checkout scm
 
                     dotnetVersion()
 
