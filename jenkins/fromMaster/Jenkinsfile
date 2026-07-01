@@ -130,7 +130,7 @@ pipeline {
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
-                                            ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
+                                            ReportPortal__Launch__Name="RP UI NUnit ${env.BUILD_BRANCH} ${env.GIT_COMMIT.take(7)} - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
