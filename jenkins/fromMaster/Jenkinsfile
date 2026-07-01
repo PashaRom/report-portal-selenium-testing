@@ -38,7 +38,6 @@ pipeline {
             REMOTE_URL = 'http://20.217.83.159:4444/wd/hub'
             ALLURE_DIR = 'allure-results'
             REPORT_PORTAL_URL = 'http://20.217.80.189:8080'
-            GIT_BRANCH = 'main'
     }
 
     stages {
@@ -46,7 +45,7 @@ pipeline {
         stage('Setup') {
             steps{
                 script{
-                    gitCheckout(env.GIT_BRANCH, 'https://github.com/PashaRom/report-portal-selenium-testing.git')
+                    checkout scm
 
                     dotnetVersion()
 
@@ -120,8 +119,7 @@ pipeline {
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.ALLURE_DIR}/${b} \\
-                                                -- NUnit.NumberOfTestWorkers=${params.THREADS} \\
-                                                --filter FullyQualifiedName~Cancel_ClosesDialog
+                                                -- NUnit.NumberOfTestWorkers=${params.THREADS}
                                             """
                                         }
                                     }
@@ -141,7 +139,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results"]
+                            [path: '${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/allure-results']
                         ]
                     ])
                 }
