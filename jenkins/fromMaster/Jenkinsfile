@@ -134,6 +134,10 @@ pipeline {
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY
 
 
+export Server__ApiKey=\$RP_KEY
+
+    env | sort | grep -i api
+
 
 echo "====== RP ======" 
 env | grep -i report 
