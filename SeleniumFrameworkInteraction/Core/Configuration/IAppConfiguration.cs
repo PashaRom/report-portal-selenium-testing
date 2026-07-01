@@ -6,7 +6,6 @@ public interface IAppConfiguration
     LogSettings LogSettings { get; }
     string BaseUrl { get; }
     string ProjectName { get; }
-    string UserPassword { get; }
     string TestDataDirectory { get; }
     int ExplicitWaitTimeoutSeconds { get; }
 }
