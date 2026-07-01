@@ -126,12 +126,13 @@ pipeline {
                                     dir("${env.PROJECT_DIR}/UITests") {
                                         withCredentials([string(credentialsId: 'RP_API_KEY', variable: 'RP_KEY')]) {
                                             sh """
+                                            sed -i "s|__API_KEY__|\$RP_KEY|g" bin/Debug/net8.0/ReportPortal.config.json
+
                                             BROWSERS=${b} \\
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
-                                            sed -i "s|__API_KEY__|\$RP_KEY|g" bin/Debug/net8.0/ReportPortal.config.json \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
