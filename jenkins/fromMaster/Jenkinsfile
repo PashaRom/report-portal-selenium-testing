@@ -39,7 +39,7 @@ pipeline {
     /*         ALLURE_DIR = 'allure-results'*/
     
             TEST_RESULTS_DIR = 'test-results'
-            ALLURE_RESULTS_DIR = 'allure-results'
+            ALLURE_RESULTS_DIR = 'UITests/bin/Debug/net8.0/allure-results'
             REPORT_PORTAL_URL = 'http://20.217.80.189:8080'
     }
 
@@ -99,7 +99,7 @@ pipeline {
         stage('Test (Selenoid)') {
             steps {
                 script {
-                    sh "rm -rf ${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/${env.ALLURE_DIR}"
+                    sh "rm -rf ${env.PROJECT_DIR}/${env.ALLURE_RESULTS_DIR}"
 
                     def browsers = []
                     browsers.add('Chrome')
@@ -146,7 +146,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS_DIR}"]
+                            [path: "${env.PROJECT_DIR}/${env.ALLURE_RESULTS_DIR}"]
                         ]
                     ])
                 }
@@ -156,7 +156,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: '${env.PROJECT_DIR}/UITests/${env.ALLURE_RESULTS_DIR}/**'
+            archiveArtifacts artifacts: "${env.PROJECT_DIR}/${env.ALLURE_RESULTS_DIR}/**"
         }
     }
 }
