@@ -172,6 +172,7 @@ public static class ActionHelper
     {
         var driver = CurrentDriver;
         var actions = new Actions(driver);
+        ArgumentNullException.ThrowIfNull(element);
 
         // фиксируем фокус
         driver.FindElement(By.TagName("body")).Click();

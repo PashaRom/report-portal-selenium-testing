@@ -115,9 +115,9 @@ public class DashboardPage : BasePage
                 WaitHelper.Until(d =>
                     d.FindElements(By.XPath(anyMissingXPath)).Any(), timeout: Timeouts.Sec3);
             }
-            catch (WebDriverTimeoutException)
+            catch (WebDriverTimeoutException ex)
             {
-                Logger.LogDebug("[{Page}] No missing widgets appeared after scroll step, continuing", Name);
+                Logger.LogDebug(ex, "[{Page}] No missing widgets appeared after scroll step, continuing", Name);
             }
 
             var scrollTop = ActionHelper.JsGetScrollTop(container);

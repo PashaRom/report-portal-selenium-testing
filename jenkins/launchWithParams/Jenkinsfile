@@ -43,18 +43,18 @@ pipeline {
 
         string(
             name: 'GIT_BRANCH',
-            defaultValue: 'module-8.1',
+            defaultValue: 'main',
             description: 'Git branch to build'
         )
     }
 
     
     environment {
-            BASE_URL = 'http://192.168.1.4:8080/'
+            BASE_URL = env.RP_BASE_URL
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
-            REMOTE_URL = 'http://192.168.56.1:4444/wd/hub'
+            REMOTE_URL = env.RP_REMOTE_URL
             ALLURE_DIR = 'allure-results'
-            REPORT_PORTAL_URL = 'http://192.168.1.4:8080'
+            REPORT_PORTAL_URL = env.REPORT_PORTAL_URL
     }
 
     stages { 
@@ -171,7 +171,7 @@ pipeline {
                     step([
                         $class: 'AllureReportPublisher',
                         results: [
-                            [path: "${env.PROJECT_DIR}/UITests/bin/Debug/net8.0/${env.ALLURE_DIR}"]
+                            [path: "${env.PROJECT_DIR}/UITests/${env.ALLURE_DIR}/**"]
                         ]
                     ])
                 }

@@ -16,7 +16,7 @@ public static class BrowserDataSource
         get
         {
             var browsers = ServiceLocator.GetService<IAppConfiguration>().DriverSettings.Browsers;
-            return browsers.Count > 0 ? browsers : new List<BrowserType> { BrowserType.Chrome };
+            return browsers?.Count > 0 ? browsers : new List<BrowserType> { BrowserType.Chrome };
         }
     }
 }

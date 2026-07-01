@@ -17,12 +17,12 @@ ${message}
 """
 
     withCredentials([string(credentialsId: 'TEAMS_WEBHOOK', variable: 'WEBHOOK')]) {
-        sh """
+        sh '''
             curl -s -X POST "$WEBHOOK" \
                  -H "Content-Type: application/json" \
                  -d '{
                        "text":"${message}"
                      }'
-        """
+        '''
     }
 }

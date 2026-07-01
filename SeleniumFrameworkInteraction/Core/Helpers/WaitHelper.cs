@@ -109,11 +109,7 @@ public static class WaitHelper
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(
-                ex,
-                "[WaitHelper.DefaultWait] Element '{Name}' did not become ready — error={Error}",
-                element.Name, ex.Message);
-            throw;
+            Logger.LogWarning(ex,"[WaitHelper.DefaultWait] Element '{Name}' did not become ready", element.Name);
         }
     }
 
