@@ -10,5 +10,8 @@
     "description": "Report Portal Project ",
     "debugMode": false,
     "attributes": []
+  },  
+  "logging": {
+    "level": "Trace"
   }
 }

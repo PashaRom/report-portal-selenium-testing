@@ -44,6 +44,14 @@ pipeline {
     }
 
     stages {
+
+        stage('Launch Job'){
+            steps{
+                script{
+                    notifyTeams("🚀 Tests has been started")
+                }
+            }
+        }
         
         stage('Setup') {
             steps{
@@ -124,6 +132,14 @@ pipeline {
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
+
+
+
+echo "====== RP ======" \\
+env | grep -i report \\
+echo "===============" \\
+
+
                                             dotnet test --no-build \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
@@ -157,6 +173,17 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: "${env.PROJECT_DIR}/${env.ALLURE_RESULTS_DIR}/**"
+        }
+        success {
+            notifyTeams("✅ Tests passed")
+        }
+
+        failure {
+            notifyTeams("❌ Tests failed")
+        }
+
+        unstable {
+            notifyTeams("⚠️ Tests unstable")
         }
     }
 }
