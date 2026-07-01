@@ -23,10 +23,10 @@ public static class ActionHelper
     /// Moves the cursor to the element and clicks it via Selenium Actions.
     /// Use when a standard click is intercepted or the element requires hover to become interactive.
     /// </summary>
-    public static void MoveToElementAndClick(IWebElement element, string elementName)
+    public static void MoveToElementAndClick(IWebElement? element, string elementName)
     {
         Logger.LogInformation("[ActionHelper] {Name}: moving to element and clicking via Actions", elementName);
-
+        ArgumentNullException.ThrowIfNull(element);
         new Actions(CurrentDriver)
             .MoveToElement(element)
             .Click()
@@ -204,9 +204,10 @@ public static class ActionHelper
     /// Clicks an element via JavaScript. Use when a standard or Actions-based click
     /// is blocked by overlapping elements or animation.
     /// </summary>
-    public static void JsClick(IWebElement element, string elementName)
+    public static void JsClick(IWebElement? element, string elementName)
     {
         Logger.LogInformation("[ActionHelper] {Name}: clicking via JavaScript", elementName);
+        ArgumentNullException.ThrowIfNull(element);
         Js.ExecuteScript("arguments[0].click();", element);
         Logger.LogInformation("[ActionHelper] {Name}: clicked successfully via JavaScript", elementName);
     }

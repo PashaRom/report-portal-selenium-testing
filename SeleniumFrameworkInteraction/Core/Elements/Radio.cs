@@ -20,7 +20,7 @@ public class Radio : WrapperElement
     public void Select()
     {
         LogAction($"Clicking on Radio element {Name}");
-        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5).Click();
+        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5)?.Click();
         LogAction($"Clicked on Radio element {Name} successfully");
     }
 

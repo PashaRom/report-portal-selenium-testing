@@ -20,7 +20,7 @@ public class Link : WrapperElement
     public void Click()
     {
         LogAction($"Clicking on Link element {Name}");
-        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5).Click();
+        WaitHelper.DefaultWait(this, timeout: Timeouts.Sec5)?.Click();
         LogAction($"Clicked on Link element {Name} successfully");
     }
 
