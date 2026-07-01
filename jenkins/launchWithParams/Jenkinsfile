@@ -50,11 +50,11 @@ pipeline {
 
     
     environment {
-            BASE_URL = env.RP_BASE_URL
+            BASE_URL = "${env.RP_BASE_URL}"
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
-            REMOTE_URL = env.RP_REMOTE_URL
+            REMOTE_URL = "${env.RP_REMOTE_URL}"
             ALLURE_DIR = 'allure-results'
-            REPORT_PORTAL_URL = env.REPORT_PORTAL_URL
+            REPORT_PORTAL_URL = "${env.REPORT_PORTAL_URL}"
     }
 
     stages { 
