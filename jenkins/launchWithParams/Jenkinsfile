@@ -38,7 +38,32 @@ pipeline {
         string(
             name: 'TEST_FILTER',
             defaultValue: 'FullyQualifiedName~Cancel_ClosesDialog',
-            description: 'dotnet test filter (например: TestCategory=dashboard_crud)'
+            description: '''Category=dashboard_crud
+                            - Using [Category] attribute
+
+                            Name=Cancel_ClosesDialog
+                            - Using exact test method name
+
+                            Name~Cancel
+                            - Using partial test method name
+
+                            FullyQualifiedName~Cancel_ClosesDialog
+                            - Using namespace/class/method name
+
+                            FullyQualifiedName~DashboardTests
+                            - Using test class name
+
+                            Category!=Smoke
+                            - Excluding category
+
+                            Name!~Draft
+                            - Excluding by partial name
+
+                            Category=Smoke&FullyQualifiedName~Login
+                            - AND condition
+
+                            Category=Smoke|Category=Regression
+                            - OR condition'''
         )
 
         string(
