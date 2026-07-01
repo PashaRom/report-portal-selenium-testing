@@ -131,11 +131,7 @@ pipeline {
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
                                             ReportPortal__Launch__Name="RP UI NUnit Daily - ${b}" \\
-
-                                            sed -i "s|__API_KEY__|\$RP_KEY|g" bin/Debug/net8.0/ReportPortal.config.json
-
-
-
+                                            sed -i "s|__API_KEY__|\$RP_KEY|g" bin/Debug/net8.0/ReportPortal.config.json \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
