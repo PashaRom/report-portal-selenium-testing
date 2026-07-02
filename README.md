@@ -796,3 +796,5 @@ allure serve allure-results
 - Declare element properties as computed `private` properties returning typed wrappers with `Root` as the third argument.
 - Use relative locators (`.//…`) for XPath or scoped CSS selectors inside components.
 - For buttons inside modals that have custom scrollbar overlays, use `ActionHelper.JsClick(element, name)` instead of `Button.Click()`.
+
+add new string for creating PR
