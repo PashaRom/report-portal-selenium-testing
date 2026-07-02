@@ -18,6 +18,11 @@ pipeline{
         githubPush()
     }
 
+    environment {
+            PROJECT_DIR = 'SeleniumFrameworkInteraction'
+    }
+
+
     stages{
          stage('Setup') {
             steps{
