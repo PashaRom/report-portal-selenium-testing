@@ -50,6 +50,8 @@ pipeline {
                 script{
                     checkout scm
 
+                    sh 'env | sort | grep -E "GIT|BRANCH|BUILD" || true'
+
                     dotnetVersion()
 
                     dotnetRestore("${env.PROJECT_DIR}")
