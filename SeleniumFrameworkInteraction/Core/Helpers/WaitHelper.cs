@@ -100,7 +100,7 @@ public static class WaitHelper
                 }
                 catch (StaleElementReferenceException ex)
                 {
-                    Logger.LogDebug(ex, "[WaitHelper.DefaultWait] StaleElementReferenceException for '{Name}', retrying...", element.Name);
+                    Logger.LogDebug("[WaitHelper.DefaultWait] StaleElementReferenceException for '{Name}', retrying...", element.Name);
                     return null;
                 }
             }, t, p, ignoredExceptions, elementName: element.Name, driver)!;
