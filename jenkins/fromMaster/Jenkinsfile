@@ -56,10 +56,6 @@ pipeline {
                     gitBranch = (env.GIT_BRANCH ?: 'unknown').replaceAll('origin/', '')
                     gitCommit = env.GIT_COMMIT?.take(7) ?: 'unknown'
                     gitAuthor = sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim() ?: 'unknown'
-
-                    echo "DEBUG GIT_BRANCH: ${gitBranch}"
-                    echo "DEBUG SHORT_COMMIT: ${gitCommit}"
-                    echo "DEBUG AUTHOR: ${gitAuthor}"
                     
                     dotnetVersion()
 

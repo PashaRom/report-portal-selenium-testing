@@ -1,10 +1,14 @@
 library(
-    identifier: 'jenkins-shared-library@module-8.1',
+    identifier: 'jenkins-shared-library@main',
     retriever: modernSCM([
         $class: 'GitSCMSource',
         remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
     ])
 )
+
+def gitBranch = 'unknown'
+def gitCommit = 'unknown'  
+def gitAuthor = 'unknown'
 
 pipeline {
     agent any
@@ -46,24 +50,28 @@ pipeline {
             REPORT_PORTAL_URL = "${env.REPORT_PORTAL_URL}"
     }
 
-    stages {
-
-        stage('Launch Job'){
-            steps{
-                script{
-                    notifyTeams("🚀 Daily run has been started")
-                }
-            }
-        }
+    stages {        
 
         stage('Setup') {
             steps{
                 script{
                     checkout scm
 
+                    gitBranch = (env.GIT_BRANCH ?: 'unknown').replaceAll('origin/', '')
+                    gitCommit = env.GIT_COMMIT?.take(7) ?: 'unknown'
+                    gitAuthor = sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim() ?: 'unknown'
+
                     dotnetVersion()
 
                     dotnetRestore("${env.PROJECT_DIR}")
+                }
+            }
+        }
+
+        stage('Launch Job'){
+            steps{
+                script{
+                    notifyTeams("🚀 Daily run has been started", gitBranch, gitCommit, gitAuthor)
                 }
             }
         }
@@ -170,15 +178,15 @@ pipeline {
         }
         
         success {
-            notifyTeams("✅ Tests passed")
+            notifyTeams("✅ Tests passed", gitBranch, gitCommit, gitAuthor)
         }
 
         failure {
-            notifyTeams("❌ Tests failed")
+            notifyTeams("❌ Tests failed", gitBranch, gitCommit, gitAuthor)
         }
 
         unstable {
-            notifyTeams("⚠️ Tests unstable")
+            notifyTeams("⚠️ Tests unstable", gitBranch, gitCommit, gitAuthor)
         }
     }
 }
