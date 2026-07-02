@@ -6,6 +6,10 @@ library(
     ])
 )
 
+def gitBranch = 'unknown'
+def gitCommit = 'unknown'  
+def gitAuthor = 'unknown'
+
 pipeline {
     agent any
 
@@ -49,15 +53,14 @@ pipeline {
                 script{
                     checkout scm
 
-                    env.BRANCH = (env.GIT_BRANCH ?: 'unknown').replaceAll('origin/', '')
-                    env.SHORT_COMMIT = env.GIT_COMMIT?.take(7) ?: 'unknown'
-                    env.AUTHOR = sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim() ?: 'unknown'
+                    gitBranch = (env.GIT_BRANCH ?: 'unknown').replaceAll('origin/', '')
+                    gitCommit = env.GIT_COMMIT?.take(7) ?: 'unknown'
+                    gitAuthor = sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim() ?: 'unknown'
 
-                    echo "DEBUG GIT_BRANCH: ${env.GIT_BRANCH}"
-                    echo "DEBUG BRANCH: ${env.BRANCH}"
-                    echo "DEBUG GIT_COMMIT: ${env.GIT_COMMIT}"
-                    echo "DEBUG SHORT_COMMIT: ${env.SHORT_COMMIT}"
-                    echo "DEBUG AUTHOR: ${env.AUTHOR}"
+                    echo "DEBUG GIT_BRANCH: ${gitBranch}"
+                    echo "DEBUG GIT_COMMIT: ${gitCommit}"
+                    echo "DEBUG SHORT_COMMIT: ${gitCommit}"
+                    echo "DEBUG AUTHOR: ${gitAuthor}"
                     
                     dotnetVersion()
 
@@ -69,7 +72,7 @@ pipeline {
         stage('Launch Job'){
             steps{
                 script{
-                    notifyTeams("🚀 Tests has been started")
+                    notifyTeams("🚀 Tests has been started", gitBranch, gitCommit, gitAuthor)
                 }
             }
         }
@@ -139,7 +142,7 @@ pipeline {
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
-                                            ReportPortal__Launch__Name="RP UI NUnit ${env.BRANCH} ${env.SHORT_COMMIT} - ${b}" \\
+                                            ReportPortal__Launch__Name="RP UI NUnit ${gitBranch} ${gitCommit} - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
@@ -176,7 +179,7 @@ pipeline {
             archiveArtifacts artifacts: "${env.PROJECT_DIR}/${env.ALLURE_RESULTS_DIR}/**"
         }
         success {
-            notifyTeams("✅ Tests passed")
+            notifyTeams("✅ Tests passed", gitBranch, gitCommit, gitAuthor)
         }
 
         failure {
@@ -184,7 +187,7 @@ pipeline {
         }
 
         unstable {
-            notifyTeams("⚠️ Tests unstable")
+            notifyTeams("⚠️ Tests unstable", gitBranch, gitCommit, gitAuthor)
         }
     }
 }

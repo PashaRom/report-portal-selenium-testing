@@ -1,8 +1,4 @@
-def call(String status) {
-
-    def branch = env.BRANCH ?: 'unknown'
-    def commit = env.SHORT_COMMIT ?: 'unknown'
-    def author = env.AUTHOR ?: 'unknown'
+def call(String status, String branch = 'unknown', String commit = 'unknown', String author = 'unknown') {
 
     def message = """${status}
 
