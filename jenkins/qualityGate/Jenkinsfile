@@ -1,5 +1,5 @@
 library(
-    identifier: 'jenkins-shared-library@module-8.1',
+    identifier: 'jenkins-shared-library@main',
     retriever: modernSCM([
         $class: 'GitSCMSource',
         remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
@@ -9,6 +9,14 @@ library(
 pipeline{
     agent any
 
+    
+    options {
+        disableConcurrentBuilds()
+    }
+
+    triggers {
+        githubPush()
+    }
 
     stages{
          stage('Setup') {
@@ -21,5 +29,53 @@ pipeline{
                 }
             }
         }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    dir("${env.PROJECT_DIR}") {
+                        withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                            sh '''                            
+                            
+                            dotnet new tool-manifest || true
+                            dotnet tool install dotnet-sonarscanner || true
+                            dotnet tool restore
+
+                            dotnet tool run dotnet-sonarscanner begin \
+                                /k:"selenium-framework" \
+                                /d:sonar.login="$SONAR_TOKEN" \
+                                /n:"Selenium Framework" \
+                                /d:sonar.tests=UITests \
+                                /d:sonar.sources=Core,Business
+
+                            dotnet build --no-restore
+
+                            dotnet tool run dotnet-sonarscanner end \
+                                /d:sonar.login="$SONAR_TOKEN"
+
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate()
+
+                        if (qg.status != 'OK') {
+                            error("Quality Gate failed: ${qg.status}")
+                        }
+                    }
+                }
+            }
+        }
+
     }
+
+
 }
