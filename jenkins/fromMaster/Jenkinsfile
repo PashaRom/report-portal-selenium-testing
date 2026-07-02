@@ -58,7 +58,6 @@ pipeline {
                     gitAuthor = sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim() ?: 'unknown'
 
                     echo "DEBUG GIT_BRANCH: ${gitBranch}"
-                    echo "DEBUG GIT_COMMIT: ${gitCommit}"
                     echo "DEBUG SHORT_COMMIT: ${gitCommit}"
                     echo "DEBUG AUTHOR: ${gitAuthor}"
                     
@@ -183,7 +182,7 @@ pipeline {
         }
 
         failure {
-            notifyTeams("❌ Tests failed")
+            notifyTeams("❌ Tests failed", gitBranch, gitCommit, gitAuthor)
         }
 
         unstable {
