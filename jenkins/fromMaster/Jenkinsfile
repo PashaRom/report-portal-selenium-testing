@@ -51,7 +51,8 @@ pipeline {
 
                     env.BRANCH = (env.GIT_BRANCH ?: 'unknown').replaceAll('origin/', '')
                     env.SHORT_COMMIT = env.GIT_COMMIT?.take(7) ?: 'unknown'
-
+                    env.AUTHOR = sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim() ?: 'unknown'
+                    
                     dotnetVersion()
 
                     dotnetRestore("${env.PROJECT_DIR}")
