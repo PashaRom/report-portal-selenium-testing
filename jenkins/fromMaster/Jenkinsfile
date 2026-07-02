@@ -40,9 +40,6 @@ pipeline {
             TEST_RESULTS_DIR = 'test-results'
             ALLURE_RESULTS_DIR = 'UITests/bin/Debug/net8.0/allure-results'
             REPORT_PORTAL_URL = "${env.REPORT_PORTAL_URL}"
-
-            BRANCH = "${env.GIT_BRANCH?.replaceFirst(/^origin\//, '') ?: 'unknown'}"
-            SHORT_COMMIT = "${env.GIT_COMMIT?.take(7) ?: 'unknown'}"
     }
 
     stages {        
@@ -52,7 +49,8 @@ pipeline {
                 script{
                     checkout scm
 
-                    sh 'env | sort | grep -E "GIT|BRANCH|BUILD" || true'
+                    env.BRANCH = (env.GIT_BRANCH ?: 'unknown').replaceAll('origin/', '')
+                    env.SHORT_COMMIT = env.GIT_COMMIT?.take(7) ?: 'unknown'
 
                     dotnetVersion()
 
