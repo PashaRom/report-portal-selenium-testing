@@ -181,11 +181,9 @@ public static class ActionHelper
         {
             int y = element.Location.Y;
 
-            // ✅ достигли цели
             if (y >= 0 && y <= 5)
                 return true;
 
-            // ✅ адаптивный скролл
             if (y > 200)
                 actions.SendKeys(Keys.PageDown).Perform();
             else if (y > 0)
