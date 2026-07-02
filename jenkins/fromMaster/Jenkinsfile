@@ -43,15 +43,7 @@ pipeline {
             REPORT_PORTAL_URL = 'http://20.217.80.189:8080'
     }
 
-    stages {
-
-        stage('Launch Job'){
-            steps{
-                script{
-                    notifyTeams("🚀 Tests has been started")
-                }
-            }
-        }
+    stages {        
         
         stage('Setup') {
             steps{
@@ -61,6 +53,14 @@ pipeline {
                     dotnetVersion()
 
                     dotnetRestore("${env.PROJECT_DIR}")
+                }
+            }
+        }
+
+        stage('Launch Job'){
+            steps{
+                script{
+                    notifyTeams("🚀 Tests has been started")
                 }
             }
         }
