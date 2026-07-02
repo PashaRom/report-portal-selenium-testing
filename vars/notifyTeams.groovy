@@ -1,16 +1,11 @@
 def call(String status) {
 
-    def branch = env.BUILD_BRANCH
-        ?: env.GIT_BRANCH
-        ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-
-    def commit = sh(
-        script: 'git rev-parse --short HEAD',
+    def branch = env.BRANCH ?: 'unknown'
+    def commit = env.SHORT_COMMIT ?: 'unknown'
+    def author = sh(
+        script: 'git log -1 --pretty=format:"%an"',
         returnStdout: true
-    ).trim()
-
-    def author = env.GIT_AUTHOR_NAME
-        ?: sh(script: 'git log -1 --pretty=format:"%an"', returnStdout: true).trim()
+    ).trim() ?: 'unknown'
 
     def message = """${status}
 

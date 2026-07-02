@@ -33,14 +33,16 @@ pipeline {
 
     
     environment {
-            BASE_URL = 'http://20.217.80.189:8080/'
+            BASE_URL = "${env.RP_BASE_URL}"
             PROJECT_DIR = 'SeleniumFrameworkInteraction'
-            REMOTE_URL = 'http://20.217.83.159:4444/wd/hub'
-    /*         ALLURE_DIR = 'allure-results'*/
+            REMOTE_URL = "${env.RP_REMOTE_URL}"
     
             TEST_RESULTS_DIR = 'test-results'
             ALLURE_RESULTS_DIR = 'UITests/bin/Debug/net8.0/allure-results'
-            REPORT_PORTAL_URL = 'http://20.217.80.189:8080'
+            REPORT_PORTAL_URL = "${env.REPORT_PORTAL_URL}"
+
+            BRANCH = "${env.GIT_BRANCH?.replaceFirst(/^origin\//, '') ?: 'unknown'}"
+            SHORT_COMMIT = "${env.GIT_COMMIT?.take(7) ?: 'unknown'}"
     }
 
     stages {        
@@ -132,7 +134,7 @@ pipeline {
                                             BaseUrl=${env.BASE_URL} \\
                                             DriverSettings__Remote=true \\
                                             DriverSettings__Headless=${params.HEADLESS_MODE == 'HEADLESS'} \\
-                                            ReportPortal__Launch__Name="RP UI NUnit ${env.BUILD_BRANCH} ${env.GIT_COMMIT.take(7)} - ${b}" \\
+                                            ReportPortal__Launch__Name="RP UI NUnit ${env.BRANCH} ${env.SHORT_COMMIT} - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
