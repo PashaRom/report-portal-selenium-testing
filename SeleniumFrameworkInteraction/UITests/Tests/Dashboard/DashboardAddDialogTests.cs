@@ -26,6 +26,7 @@ public class DashboardAddDialogTests : DashboardTestBase
 
     [Test]
     [Category("KAN-T1")]
+    [Property("testKey", "KAN-T1")]
     [Description("Cancel closes the Add New Dashboard dialog")]
     public void Cancel_ClosesDialog()
     {
