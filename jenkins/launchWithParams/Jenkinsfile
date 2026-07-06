@@ -216,8 +216,7 @@ pipeline {
                             -X POST \
                             -H "Authorization: Bearer $ZEPHYR_TOKEN" \
                             -F "file=@{}" \
-                            -F "projectKey=KAN" \
-                            https://api.zephyrscale.smartbear.com/v2/automations/executions/junit \
+                            https://api.zephyrscale.smartbear.com/v2/automations/executions/junit?projectKey=KAN \
                         \\;
                     '''
                 }
