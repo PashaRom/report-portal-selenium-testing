@@ -210,7 +210,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'ZEPHYR_TOKEN', variable: 'ZEPHYR_TOKEN')]) {
                     sh '''
-                    find SeleniumFrameworkInteraction/UITests/test-results \
+                    find SeleniumFrameworkInteraction/UITests/test-results/** \
                         -name "junit.xml" \
                         -exec curl \
                             -X POST \
