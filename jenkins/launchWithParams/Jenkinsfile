@@ -175,6 +175,7 @@ pipeline {
                                             ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
+                                                --logger:"junit;LogFilePath=${env.TEST_RESULTS_DIR}/${b}/junit.xml" \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
                                                 --filter "${params.TEST_FILTER}" \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
@@ -203,6 +204,25 @@ pipeline {
                 }
             }
         }
+
+        
+        stage('Upload Results To Zephyr') {
+            steps {
+                withCredentials([string(credentialsId: 'ZEPHYR_TOKEN', variable: 'ZEPHYR_TOKEN')]) {
+                    sh '''
+                    find SeleniumFrameworkInteraction/UITests/test-results \
+                        -name "junit.xml" \
+                        -exec curl \
+                            -X POST \
+                            -H "Authorization: Bearer $ZEPHYR_TOKEN" \
+                            -F "file=@{}" \
+                            https://api.zephyrscale.smartbear.com/v2/automations/executions/junit \
+                        \\;
+                    '''
+                }
+            }
+        }
+
 
     }
     post {
