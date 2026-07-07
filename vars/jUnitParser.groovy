@@ -1,7 +1,7 @@
 /**
  * Parses junit.xml via python3
  * @param filePath — path to the file on the agent
- * Returns a List<Map> of failed tests
+ * @return List<Map> of failed tests
  */
 
 def parseFailedTests(String filePath) {
@@ -25,18 +25,27 @@ BLOCK = "---END---"
 
 for suite in suites:
     for tc in suite.findall("testcase"):
-        node = tc.find("failure") or tc.find("error")
-        if node is not None:
-            classname  = tc.get("classname", "")
-            testname   = tc.get("name", "")
-            err_type   = node.get("type", "")
-            message    = node.get("message", "").replace("\\n", " ")
-            stacktrace = (node.text or "").strip().replace("\\n", "\\\\n")
-            print(classname + SEP + testname + SEP + err_type + SEP + message + SEP + stacktrace)
-            print(BLOCK)
+        failure_node = tc.find("failure")
+        error_node   = tc.find("error")
+
+        # ✅ Explicit check using is not None
+        if failure_node is not None:
+            node = failure_node
+        elif error_node is not None:
+            node = error_node
+        else:
+            continue
+
+        classname  = tc.get("classname", "")
+        testname   = tc.get("name", "")
+        err_type   = node.get("type", "")
+        message    = node.get("message", "").replace("\\n", " ").replace("|||", " ")
+        stacktrace = (node.text or "").strip().replace("\\n", "\\\\n").replace("|||", " ")
+
+        print(classname + SEP + testname + SEP + err_type + SEP + message + SEP + stacktrace)
+        print(BLOCK)
 '''
 
-    // Save the python script to a temporary file — avoid issues with quotes
     def scriptFile = '.junitparser_tmp.py'
     writeFile file: scriptFile, text: pythonScript
 
