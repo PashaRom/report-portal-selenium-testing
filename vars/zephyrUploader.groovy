@@ -70,41 +70,36 @@ def call(Map config = [:]) {
 }
 
 // ─── Processing a single failed test ──────────────────────────────────────────
-private def processFailedTest(Map test,
-                               Map config, boolean dryRun) {
-    def summary     = "[AUTO] Test Failed: ${test.className}.${test.testName}"
+private def processFailedTest(Map test, Map config, boolean dryRun) {
+    def summary     = '[AUTO] Test Failed: ' + test.className + '.' + test.testName
     def description = buildDescription(test)
 
     echo "  🔍 Checking for duplicate bug for: ${test.testName}"
 
-    // ── 4. Check for duplicate ──────────────────────────────────────────────
-    def existingBug = dryRun ? null
+    // ── Проверка дубликата — возвращает String key или null ───────────────
+    String existingBugKey = dryRun ? null
         : jiraClient.findOpenBugBySummary(config.jiraBaseUrl, config.projectKey, summary)
 
     String bugKey
-    if (existingBug) {
-        bugKey = existingBug.key
+    if (existingBugKey) {
+        bugKey = existingBugKey
         echo "  ♻️  Open bug already exists: ${bugKey} — skipping creation"
     } else {
         if (!dryRun) {
-            def created = jiraClient.createBug(
-                config.jiraBaseUrl,
-                config.projectKey, summary, description
-            )
-            bugKey = created.key
+            // createBug возвращает String key напрямую
+            bugKey = jiraClient.createBug(config.jiraBaseUrl, config.projectKey, summary, description)
             echo "  🐛 Created bug: ${bugKey}"
         } else {
-            echo "  [DryRun] Create bug: ${summary}"
+            echo "  [DryRun] Would create bug: ${summary}"
             bugKey = 'DRY-RUN'
         }
     }
 
-    // ── 5. Link bug to Zephyr test case ──────────────────────────────
-    def testCase = dryRun ? null
+    // ── Поиск тест-кейса — возвращает String key или null ─────────────────
+    String tcKey = dryRun ? null
         : zephyrClient.findTestCaseByName(config.projectKey, test.testName)
 
-    if (testCase) {
-        def tcKey = testCase.key
+    if (tcKey) {
         echo "  🔗 Linking bug ${bugKey} to test case: ${tcKey}"
         if (!dryRun) {
             zephyrClient.linkIssueToTestCase(tcKey, bugKey)

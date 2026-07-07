@@ -21,8 +21,12 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
         returnStdout: true
     ).trim()
 
+    // ✅ Возвращаем только String, не LazyMap
     def json = new JsonSlurper().parseText(response)
-    return json.total > 0 ? json.issues[0] : null
+    if (json.total > 0) {
+        return json.issues[0].key as String
+    }
+    return null
 }
 
 def createBug(String baseUrl, String projectKey, String summary, String description) {
@@ -57,7 +61,9 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 
     sh 'rm -f ' + payloadFile
 
-    return new JsonSlurper().parseText(response)
+    // ✅ Возвращаем только String, не LazyMap
+    def json = new JsonSlurper().parseText(response)
+    return json.key as String
 }
 
 def linkIssues(String baseUrl, String bugKey, String testCaseKey) {

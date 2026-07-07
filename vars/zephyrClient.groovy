@@ -19,16 +19,19 @@ def findTestCaseByName(String projectKey, String testName) {
         returnStdout: true
     ).trim()
 
+    // ✅ Возвращаем только String, не LazyMap
     def json = new JsonSlurper().parseText(response)
-    return (json.values && json.values.size() > 0) ? json.values[0] : null
+    if (json.values && json.values.size() > 0) {
+        return json.values[0].key as String
+    }
+    return null
 }
 
 def linkIssueToTestCase(String testCaseKey, String issueKey) {
-    def zephyrBase = 'https://api.zephyrscale.smartbear.com/v2'
-    def payload    = '{"issueKey":"' + issueKey + '"}'
+    def zephyrBase  = 'https://api.zephyrscale.smartbear.com/v2'
     def payloadFile = '.zephyr_link.json'
 
-    writeFile file: payloadFile, text: payload
+    writeFile file: payloadFile, text: '{"issueKey":"' + issueKey + '"}'
 
     sh('''curl -s -X POST \
         -H "Authorization: Bearer ${ZEPHYR_TOKEN}" \
