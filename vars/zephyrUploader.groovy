@@ -76,7 +76,6 @@ private def processFailedTest(Map test, Map config, boolean dryRun) {
 
     echo "  🔍 Checking for duplicate bug for: ${test.testName}"
 
-    // ── Проверка дубликата — возвращает String key или null ───────────────
     String existingBugKey = dryRun ? null
         : jiraClient.findOpenBugBySummary(config.jiraBaseUrl, config.projectKey, summary)
 
@@ -86,8 +85,11 @@ private def processFailedTest(Map test, Map config, boolean dryRun) {
         echo "  ♻️  Open bug already exists: ${bugKey} — skipping creation"
     } else {
         if (!dryRun) {
-            // createBug возвращает String key напрямую
             bugKey = jiraClient.createBug(config.jiraBaseUrl, config.projectKey, summary, description)
+            if (!bugKey) {
+                echo "  ❌ Failed to create bug, skipping linking"
+                return
+            }
             echo "  🐛 Created bug: ${bugKey}"
         } else {
             echo "  [DryRun] Would create bug: ${summary}"
@@ -95,14 +97,16 @@ private def processFailedTest(Map test, Map config, boolean dryRun) {
         }
     }
 
-    // ── Поиск тест-кейса — возвращает String key или null ─────────────────
     String tcKey = dryRun ? null
         : zephyrClient.findTestCaseByName(config.projectKey, test.testName)
 
     if (tcKey) {
         echo "  🔗 Linking bug ${bugKey} to test case: ${tcKey}"
         if (!dryRun) {
-            zephyrClient.linkIssueToTestCase(tcKey, bugKey)
+            // Получаем числовой ID бага для Zephyr
+            String bugId = jiraClient.getIssueId(config.jiraBaseUrl, bugKey)
+            zephyrClient.linkIssueToTestCase(tcKey, bugId)
+            // Jira issue link (двусторонняя связь)
             jiraClient.linkIssues(config.jiraBaseUrl, bugKey, tcKey)
         }
     } else {

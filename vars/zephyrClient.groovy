@@ -19,7 +19,6 @@ def findTestCaseByName(String projectKey, String testName) {
         returnStdout: true
     ).trim()
 
-    // ✅ Возвращаем только String, не LazyMap
     def json = new JsonSlurper().parseText(response)
     if (json.values && json.values.size() > 0) {
         return json.values[0].key as String
@@ -27,17 +26,25 @@ def findTestCaseByName(String projectKey, String testName) {
     return null
 }
 
-def linkIssueToTestCase(String testCaseKey, String issueKey) {
+def linkIssueToTestCase(String testCaseKey, String issueId) {
+    // Zephyr требует числовой issueId, не issueKey
     def zephyrBase  = 'https://api.zephyrscale.smartbear.com/v2'
     def payloadFile = '.zephyr_link.json'
 
-    writeFile file: payloadFile, text: '{"issueKey":"' + issueKey + '"}'
+    writeFile file: payloadFile, text: '{"issueId":' + issueId + '}'
 
-    sh('''curl -s -X POST \
-        -H "Authorization: Bearer ${ZEPHYR_TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d @''' + payloadFile + ''' \
-        "''' + zephyrBase + '''/testcases/''' + testCaseKey + '''/links/issues"''')
+    def response = sh(
+        script: '''curl -s -X POST \
+            -H "Authorization: Bearer ${ZEPHYR_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d @''' + payloadFile + ''' \
+            "''' + zephyrBase + '''/testcases/''' + testCaseKey + '''/links/issues"''',
+        returnStdout: true
+    ).trim()
 
     sh 'rm -f ' + payloadFile
+
+    if (response) {
+        echo "  [DEBUG] zephyr linkIssue response: ${response}"
+    }
 }
