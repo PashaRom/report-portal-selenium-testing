@@ -223,6 +223,22 @@ pipeline {
             }
         }
 
+        stages {
+         stage('Upload Results & Create Bugs') {
+             steps {
+                 zephyrUploader(
+                     resultsPattern : 'SeleniumFrameworkInteraction/UITests/test-results/**/junit.xml',
+                     projectKey     : 'KAN',
+                     jiraBaseUrl    : 'https://pasharomash.atlassian.net',
+                     jiraTokenId    : 'JIRA_CLOUD_TOKEN',
+                     zephyrTokenId  : 'ZEPHYR_TOKEN',
+                     createBugs     : true,
+                     dryRun         : false
+                 )
+             }
+         }
+     }
+
 
     }
     post {
