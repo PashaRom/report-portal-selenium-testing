@@ -1,7 +1,5 @@
-/**
- * Jira REST API Client
- * Tokens are read directly from the environment (set via withCredentials in zephyrUploader)
- */
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
     def escapedSummary = summary.replace('"', '\\"')
@@ -23,13 +21,12 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
         returnStdout: true
     ).trim()
 
-    def json = readJSON text: response
+    def json = new JsonSlurper().parseText(response)
     return json.total > 0 ? json.issues[0] : null
 }
 
 def createBug(String baseUrl, String projectKey, String summary, String description) {
-    // Pass the payload through a file — avoids issues with quotes in sh
-    def payload = [
+    def payload = JsonOutput.toJson([
         fields: [
             project    : [key: projectKey],
             summary    : summary,
@@ -44,10 +41,10 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
             issuetype  : [name: 'Bug'],
             priority   : [name: 'High']
         ]
-    ]
+    ])
 
-    def payloadFile = '.jira_create_bug_payload.json'
-    writeJSON file: payloadFile, json: payload
+    def payloadFile = '.jira_create_bug.json'
+    writeFile file: payloadFile, text: payload
 
     def response = sh(
         script: '''curl -s -X POST \
@@ -58,20 +55,20 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
         returnStdout: true
     ).trim()
 
-    sh "rm -f ${payloadFile}"
+    sh 'rm -f ' + payloadFile
 
-    return readJSON text: response
+    return new JsonSlurper().parseText(response)
 }
 
 def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
-    def payload = [
+    def payload = JsonOutput.toJson([
         type        : [name: 'relates to'],
         inwardIssue : [key: bugKey],
         outwardIssue: [key: testCaseKey]
-    ]
+    ])
 
-    def payloadFile = '.jira_link_payload.json'
-    writeJSON file: payloadFile, json: payload
+    def payloadFile = '.jira_link.json'
+    writeFile file: payloadFile, text: payload
 
     sh('''curl -s -X POST \
         -H "Authorization: Bearer ${JIRA_TOKEN}" \
@@ -79,5 +76,5 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
         -d @''' + payloadFile + ''' \
         "''' + baseUrl + '''/rest/api/3/issueLink"''')
 
-    sh "rm -f ${payloadFile}"
+    sh 'rm -f ' + payloadFile
 }
