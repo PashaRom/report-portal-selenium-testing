@@ -1,6 +1,7 @@
 /**
- * Parses junit.xml via Python3 (bypassing Jenkins sandbox limitations)
- * Returns a List<Map> of failed tests
+ * Парсит junit.xml через python3
+ * @param filePath — путь к файлу на агенте
+ * Возвращает List<Map> упавших тестов
  */
 
 def parseFailedTests(String filePath) {
@@ -14,7 +15,6 @@ path = sys.argv[1]
 tree = ET.parse(path)
 root = tree.getroot()
 
-# Support for <testsuites> and <testsuite>
 if root.tag == "testsuites":
     suites = root.findall("testsuite")
 else:
@@ -36,16 +36,21 @@ for suite in suites:
             print(BLOCK)
 '''
 
+    // Сохраняем python скрипт во временный файл — избегаем проблем с кавычками
+    def scriptFile = '.junitparser_tmp.py'
+    writeFile file: scriptFile, text: pythonScript
+
     def rawOutput = sh(
-        script: "python3 -c '${pythonScript.replace("'", "'\\''")}' '${filePath}'",
+        script: "python3 ${scriptFile} '${filePath}'",
         returnStdout: true
     ).trim()
+
+    sh "rm -f ${scriptFile}"
 
     if (!rawOutput) {
         return result
     }
 
-    // Parse each block
     rawOutput.split('---END---').each { block ->
         def line = block.trim()
         if (!line) return

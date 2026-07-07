@@ -53,8 +53,7 @@ def call(Map config = [:]) {
             if (!createBugs) return
 
             // ── 3. Parse failed tests ────────────────────────────────────
-            def xmlContent  = readFile(filePath)
-            def failedTests = jUnitParser.parseFailedTests(xmlContent)
+            def failedTests = jUnitParser.parseFailedTests(filePath)
 
             if (!failedTests || failedTests.isEmpty()) {
                 echo "✅ No failed tests in: ${filePath}"
