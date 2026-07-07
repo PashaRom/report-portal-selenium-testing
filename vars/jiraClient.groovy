@@ -3,7 +3,7 @@ import groovy.json.JsonSlurper
 
 /**
  * ВАЖНО: Jira Cloud требует Basic Auth: email:api_token в base64
- * JIRA_TOKEN должен быть в формате: email@company.com:your_api_token
+ * JIRA_CLOUD_TOKEN должен быть в формате: email@company.com:your_api_token
  * В Jenkins credentials: тип "Secret text", значение "email:token"
  */
 
@@ -21,7 +21,7 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
 
     def response = sh(
         script: '''curl -s -X GET \
-            -H "Authorization: Basic $(echo -n "${JIRA_TOKEN}" | base64)" \
+            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
             -H "Content-Type: application/json" \
             "''' + url + '''"''',
         returnStdout: true
@@ -59,7 +59,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 
     def response = sh(
         script: '''curl -s -X POST \
-            -H "Authorization: Basic $(echo -n "${JIRA_TOKEN}" | base64)" \
+            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
             "''' + baseUrl + '''/rest/api/3/issue"''',
@@ -84,7 +84,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 def getIssueId(String baseUrl, String issueKey) {
     def response = sh(
         script: '''curl -s -X GET \
-            -H "Authorization: Basic $(echo -n "${JIRA_TOKEN}" | base64)" \
+            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
             -H "Content-Type: application/json" \
             "''' + baseUrl + '''/rest/api/3/issue/''' + issueKey + '''?fields=id"''',
         returnStdout: true
@@ -106,7 +106,7 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
 
     def response = sh(
         script: '''curl -s -X POST \
-            -H "Authorization: Basic $(echo -n "${JIRA_TOKEN}" | base64)" \
+            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
             "''' + baseUrl + '''/rest/api/3/issueLink"''',
