@@ -1,5 +1,5 @@
 library(
-    identifier: 'jenkins-shared-library@main',
+    identifier: 'jenkins-shared-library@branch-2',
     retriever: modernSCM([
         $class: 'GitSCMSource',
         remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
