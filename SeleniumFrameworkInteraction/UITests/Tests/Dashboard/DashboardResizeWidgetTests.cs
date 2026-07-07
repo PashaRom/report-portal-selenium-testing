@@ -14,8 +14,8 @@ namespace UITests.Tests.Dashboard
         public DashboardResizeWidgetTests(BrowserType browser) : base(browser) { }
 
         [Test]
-        [Description("Default user creates a dashboard with 5 available widgets and resize ones")]
-        public void ResizeWidget_ResizeWidgetAndCheckSize()
+        [Description("Default user creates a dashboard with 6 available widgets and resize ones")]
+        public void KAN_T2_ResizeWidget_ResizeWidgetAndCheckSize()
         {
             var allWidgets = WidgetTypesProvider.GetAllWidgets().ToList();
             var widgetOrder = 1;
