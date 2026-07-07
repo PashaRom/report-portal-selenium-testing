@@ -223,7 +223,6 @@ pipeline {
             }
         }
 
-        stages {
          stage('Upload Results & Create Bugs') {
              steps {
                  zephyrUploader(
@@ -237,8 +236,6 @@ pipeline {
                  )
              }
          }
-     }
-
 
     }
     post {
