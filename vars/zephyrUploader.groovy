@@ -1,16 +1,5 @@
 /**
  * Entry point from Jenkinsfile
- *
- * Usage:
- *   zephyrUploader(
- *       resultsPattern : 'path/to/test-results/** /junit.xml',
- *       projectKey     : 'KAN',
- *       jiraBaseUrl    : 'https://company.atlassian.net',
- *       jiraTokenId    : 'JIRA_TOKEN',
- *       zephyrTokenId  : 'ZEPHYR_TOKEN',
- *       createBugs     : true,   // optional, default: true
- *       dryRun         : false   // optional, default: false
- *   )
  */
 
 def call(Map config = [:]) {
@@ -32,45 +21,50 @@ def call(Map config = [:]) {
         def zephyrToken = env.ZEPHYR_TOKEN
         def jiraToken   = env.JIRA_TOKEN
 
-        // ── 1. Find all junit.xml files ─────────────────────────────────────────
-        def xmlFiles = findFiles(glob: config.resultsPattern)
-        if (!xmlFiles || xmlFiles.length == 0) {
-            echo "⚠️  No files found for pattern: ${config.resultsPattern}"
+        // ── 1. Find all junit.xml files using sh find ───────────────────────────
+        // resultsPattern is the search directory, for example:
+        // 'SeleniumFrameworkInteraction/UITests/test-results'
+        def rawFiles = sh(
+            script: "find ${config.resultsPattern} -name 'junit.xml' 2>/dev/null || true",
+            returnStdout: true
+        ).trim()
+
+        if (!rawFiles) {
+            echo "⚠️  No junit.xml files found in: ${config.resultsPattern}"
             return
         }
 
-        echo "📂 Found result files: ${xmlFiles.length}"
+        def xmlFiles = rawFiles.split('\n').findAll { it.trim() }
+        echo "📂 Found result files: ${xmlFiles.size()}"
 
-        xmlFiles.each { xmlFile ->
+        xmlFiles.each { filePath ->
+            filePath = filePath.trim()
             echo "──────────────────────────────────────────────────"
-            echo "📄 Processing: ${xmlFile.path}"
+            echo "📄 Processing: ${filePath}"
 
             // ── 2. Upload to Zephyr ──────────────────────────────────────
             if (!dryRun) {
-                zephyrClient.uploadResults(zephyrToken, config.projectKey, xmlFile.path)
-                echo "✅ Uploaded to Zephyr: ${xmlFile.path}"
+                zephyrClient.uploadResults(zephyrToken, config.projectKey, filePath)
+                echo "✅ Uploaded to Zephyr: ${filePath}"
             } else {
-                echo "[DryRun] Upload to Zephyr: ${xmlFile.path}"
+                echo "[DryRun] Upload to Zephyr: ${filePath}"
             }
 
             if (!createBugs) return
 
             // ── 3. Parse failed tests ────────────────────────────────────
-            def xmlContent  = readFile(xmlFile.path)
+            def xmlContent  = readFile(filePath)
             def failedTests = jUnitParser.parseFailedTests(xmlContent)
 
-            if (!failedTests) {
-                echo "✅ No failed tests in: ${xmlFile.path}"
+            if (!failedTests || failedTests.isEmpty()) {
+                echo "✅ No failed tests in: ${filePath}"
                 return
             }
 
             echo "❌ Failed tests: ${failedTests.size()}"
 
             failedTests.each { test ->
-                processFailedTest(
-                    test, zephyrToken, jiraToken,
-                    config, dryRun
-                )
+                processFailedTest(test, zephyrToken, jiraToken, config, dryRun)
             }
         }
     }
@@ -93,21 +87,20 @@ private def processFailedTest(Map test, String zephyrToken, String jiraToken,
         bugKey = existingBug.key
         echo "  ♻️  Open bug already exists: ${bugKey} — skipping creation"
     } else {
-        // ── 5. Create bug ─────────────────────────────────────────────────
         if (!dryRun) {
             def created = jiraClient.createBug(
                 config.jiraBaseUrl, jiraToken,
                 config.projectKey, summary, description
             )
             bugKey = created.key
-            echo "  🐛 Bug created: ${bugKey}"
+            echo "  🐛 Created bug: ${bugKey}"
         } else {
             echo "  [DryRun] Create bug: ${summary}"
             bugKey = 'DRY-RUN'
         }
     }
 
-    // ── 6. Link bug to Zephyr test case ──────────────────────────────
+    // ── 5. Link bug to Zephyr test case ──────────────────────────────
     def testCase = dryRun ? null
         : zephyrClient.findTestCaseByName(zephyrToken, config.projectKey, test.testName)
 
@@ -115,8 +108,8 @@ private def processFailedTest(Map test, String zephyrToken, String jiraToken,
         def tcKey = testCase.key
         echo "  🔗 Linking bug ${bugKey} to test case: ${tcKey}"
         if (!dryRun) {
-            zephyrClient.linkIssueToTestCase(zephyrToken, tcKey, bugKey)  // Zephyr link
-            jiraClient.linkIssues(config.jiraBaseUrl, jiraToken, bugKey, tcKey) // Jira link
+            zephyrClient.linkIssueToTestCase(zephyrToken, tcKey, bugKey)
+            jiraClient.linkIssues(config.jiraBaseUrl, jiraToken, bugKey, tcKey)
         }
     } else {
         echo "  ⚠️  Test case '${test.testName}' not found in Zephyr"

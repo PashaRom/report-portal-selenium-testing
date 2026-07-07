@@ -226,7 +226,7 @@ pipeline {
          stage('Upload Results & Create Bugs') {
              steps {
                  zephyrUploader(
-                     resultsPattern : 'SeleniumFrameworkInteraction/UITests/test-results/**/junit.xml',
+                     resultsPattern : 'SeleniumFrameworkInteraction/UITests/test-results',
                      projectKey     : 'KAN',
                      jiraBaseUrl    : 'https://pasharomash.atlassian.net',
                      jiraTokenId    : 'JIRA_CLOUD_TOKEN',
