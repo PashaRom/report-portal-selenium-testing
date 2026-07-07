@@ -1,7 +1,7 @@
 /**
- * Парсит junit.xml через python3
- * @param filePath — путь к файлу на агенте
- * Возвращает List<Map> упавших тестов
+ * Parses junit.xml via python3
+ * @param filePath — path to the file on the agent
+ * Returns a List<Map> of failed tests
  */
 
 def parseFailedTests(String filePath) {
@@ -36,7 +36,7 @@ for suite in suites:
             print(BLOCK)
 '''
 
-    // Сохраняем python скрипт во временный файл — избегаем проблем с кавычками
+    // Save the python script to a temporary file — avoid issues with quotes
     def scriptFile = '.junitparser_tmp.py'
     writeFile file: scriptFile, text: pythonScript
 
