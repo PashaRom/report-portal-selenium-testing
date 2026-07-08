@@ -66,6 +66,9 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
     def payloadFile = '.jira_create_bug.json'
     writeFile file: payloadFile, text: payload
 
+    echo "  [DEBUG] createBug payload: ${payload}"
+    sh "cat ${payloadFile}"
+
     def response = sh(
         script: '''curl -s -X POST \
             -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
