@@ -10,14 +10,11 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
     def escapedSummary = summary.replace('"', '\\"')
     def jql = 'project = "' + projectKey + '" ' +
               'AND issuetype = Bug ' +
-              'AND status != Done ' +
-              'AND status != Closed ' +
-              'AND status != Resolved ' +
               'AND summary ~ "' + escapedSummary + '"'
 
     def payload = JsonOutput.toJson([
         jql       : jql,
-        maxResults: 1,
+        maxResults: 50,
         fields    : ['summary', 'status', 'id']
     ])
 
@@ -40,7 +37,18 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
 
     def json = new JsonSlurper().parseText(response)
     if (json.issues && json.issues.size() > 0) {
-        return json.issues[0].key as String
+        // Create a new bug only when all duplicates are in Done status.
+        def activeIssue = json.issues.find { issue ->
+            def statusName = issue?.fields?.status?.name
+            !(statusName?.equalsIgnoreCase('Done'))
+        }
+
+        if (activeIssue) {
+            echo "  [DEBUG] Duplicate bug found in status '${activeIssue.fields.status.name}': ${activeIssue.key}"
+            return activeIssue.key as String
+        }
+
+        echo "  [DEBUG] Matching bugs found only in Done status; new bug creation is allowed"
     }
     return null
 }
