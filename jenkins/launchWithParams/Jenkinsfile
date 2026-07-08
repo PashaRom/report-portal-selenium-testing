@@ -37,7 +37,7 @@ pipeline {
 
         string(
             name: 'TEST_FILTER',
-            defaultValue: 'FullyQualifiedName~Cancel_ClosesDialog',
+            defaultValue: 'FullyQualifiedName~KAN_T2_ResizeWidget_ResizeWidgetAndCheckSize',
             description: '''Category=dashboard_crud
                             - Using [Category] attribute
 
@@ -68,7 +68,7 @@ pipeline {
 
         string(
             name: 'GIT_BRANCH',
-            defaultValue: 'main',
+            defaultValue: 'branch-2',
             description: 'Git branch to build'
         )
     }

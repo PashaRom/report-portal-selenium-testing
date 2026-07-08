@@ -30,7 +30,7 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
-            "''' + baseUrl + '''/rest/api/3/search"''',
+            "''' + baseUrl + '''/rest/api/3/search/jql"''',
         returnStdout: true
     ).trim()
 
