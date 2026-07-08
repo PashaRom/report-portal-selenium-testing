@@ -26,10 +26,10 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
 
     def response = sh(
         script: '''curl -s -X POST \
-            -u "${JIRA_CLOUD_TOKEN}" \
+            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            -d @''' + payloadFile + ''' \
+            -d @${payloadFile} \
             "''' + baseUrl + '''/rest/api/3/search/jql"''',
         returnStdout: true
     ).trim()
@@ -67,10 +67,10 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 
     def response = sh(
         script: '''curl -s -X POST \
-            -u "${JIRA_CLOUD_TOKEN}" \
+            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            -d @''' + payloadFile + ''' \
+            -d @${payloadFile} \
             "''' + baseUrl + '''/rest/api/3/issue"''',
         returnStdout: true
     ).trim()
@@ -89,7 +89,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 def getIssueId(String baseUrl, String issueKey) {
     def response = sh(
         script: '''curl -s -X GET \
-            -u "${JIRA_CLOUD_TOKEN}" \
+            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
             -H "Accept: application/json" \
             "''' + baseUrl + '''/rest/api/3/issue/''' + issueKey + '''?fields=id"''',
         returnStdout: true
