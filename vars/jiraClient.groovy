@@ -3,8 +3,8 @@ import groovy.json.JsonSlurper
 
 /**
  * JIRA_CLOUD_AUTH формат: "email@company.com:api_token"
- * В Jenkins credentials используйте тип "Username with password"
- * и передавайте через usernameColonPassword в переменную JIRA_CLOUD_AUTH.
+ * В Jenkins credentials используйте тип "Secret text"
+ * и передавайте значение как одну строку "email:api_token".
  */
 
 def findOpenBugBySummary(String baseUrl, String projectKey, String summary, String dedupLabel = null) {

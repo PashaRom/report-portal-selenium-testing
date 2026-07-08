@@ -16,7 +16,7 @@ def call(Map config = [:]) {
 
     withCredentials([
         string(credentialsId: config.zephyrTokenId, variable: 'ZEPHYR_TOKEN'),
-        usernameColonPassword(credentialsId: config.jiraTokenId, variable: 'JIRA_CLOUD_AUTH')
+        string(credentialsId: config.jiraTokenId, variable: 'JIRA_CLOUD_AUTH')
     ]) {
         def zephyrToken = env.ZEPHYR_TOKEN
         def jiraAuth    = env.JIRA_CLOUD_AUTH
