@@ -1,5 +1,5 @@
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurperClassic
+import groovy.json.JsonSlurper
 
 /**
  * JIRA_CLOUD_TOKEN формат: "email@company.com:your_api_token"
@@ -80,7 +80,8 @@ private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) 
     sh 'rm -f ' + payloadFile
     echo "  [DEBUG] jiraSearch response: ${response}"
 
-    return new JsonSlurperClassic().parseText(response)
+    def parsed = new JsonSlurper().parseText(response)
+    return toSerializable(parsed)
 }
 
 def createBug(String baseUrl, String projectKey, String summary, String description, String dedupLabel = null) {
@@ -126,7 +127,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
     sh 'rm -f ' + payloadFile
     echo "  [DEBUG] createBug response: ${response}"
 
-    def json = new JsonSlurperClassic().parseText(response)
+    def json = toSerializable(new JsonSlurper().parseText(response))
     if (json.key) {
         return json.key as String
     }
@@ -143,8 +144,29 @@ def getIssueId(String baseUrl, String issueKey) {
         returnStdout: true
     ).trim()
 
-    def json = new JsonSlurperClassic().parseText(response)
+    def json = toSerializable(new JsonSlurper().parseText(response))
     return json.id as String
+}
+
+private def toSerializable(Object value) {
+    if (value == null || value instanceof String || value instanceof Number || value instanceof Boolean) {
+        return value
+    }
+
+    if (value instanceof Map) {
+        def map = [:]
+        value.each { k, v ->
+            map[k] = toSerializable(v)
+        }
+        return map
+    }
+
+    if (value instanceof List) {
+        return value.collect { item -> toSerializable(item) }
+    }
+
+    // Fallback for unknown JSON node types used by parser internals.
+    return value.toString()
 }
 
 def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
