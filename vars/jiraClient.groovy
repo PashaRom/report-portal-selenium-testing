@@ -18,34 +18,30 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary, Stri
         jql += 'AND summary = "' + escapedSummary + '"'
     }
 
-    def payload = JsonOutput.toJson([
-        jql       : jql,
-        maxResults: 50,
-        fields    : ['summary', 'status', 'id', 'labels']
-    ])
-
-    def payloadFile = '.jira_search.json'
-    writeFile file: payloadFile, text: payload
     echo "  [DEBUG] findOpenBug JQL: ${jql}"
+    def json = jiraSearch(baseUrl, jql, ['summary', 'status', 'id', 'labels'], 50)
 
-    def response = sh(
-        script: '''curl -s -X POST \
-            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
-            -H "Accept: application/json" \
-            -H "Content-Type: application/json" \
-            -d @''' + payloadFile + ''' \
-            "''' + baseUrl + '''/rest/api/3/search/jql"''',
-        returnStdout: true
-    ).trim()
+    List matchedIssues = (json?.issues ?: []) as List
 
+    // Fallback path: some Jira Cloud setups may return empty for strict label/summary JQL.
+    // In that case, fetch recent bugs and filter in code.
+    if (!matchedIssues) {
+        def fallbackJql = 'project = "' + projectKey + '" AND issuetype = Bug ORDER BY created DESC'
+        echo "  [DEBUG] findOpenBug fallback JQL: ${fallbackJql}"
+        def fallbackJson = jiraSearch(baseUrl, fallbackJql, ['summary', 'status', 'id', 'labels'], 100)
+        matchedIssues = ((fallbackJson?.issues ?: []) as List).findAll { issue ->
+            def issueSummary = issue?.fields?.summary as String
+            def issueLabels = (issue?.fields?.labels ?: []) as List
+            def labelMatches = dedupLabel ? issueLabels.contains(dedupLabel) : false
+            def summaryMatches = issueSummary == summary
+            labelMatches || summaryMatches
+        }
+        echo "  [DEBUG] findOpenBug fallback matched issues: ${matchedIssues.size()}"
+    }
 
-    sh 'rm -f ' + payloadFile
-    echo "  [DEBUG] findOpenBug response: ${response}"
-
-    def json = new JsonSlurper().parseText(response)
-    if (json.issues && json.issues.size() > 0) {
+    if (matchedIssues && matchedIssues.size() > 0) {
         // Create a new bug only when all duplicates are in Done status.
-        def activeIssue = json.issues.find { issue ->
+        def activeIssue = matchedIssues.find { issue ->
             def statusName = issue?.fields?.status?.name
             def statusCategoryKey = issue?.fields?.status?.statusCategory?.key
             !(statusCategoryKey?.equalsIgnoreCase('done') || statusName?.equalsIgnoreCase('Done'))
@@ -59,6 +55,32 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary, Stri
         echo "  [DEBUG] Matching bugs found only in Done status; new bug creation is allowed"
     }
     return null
+}
+
+private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) {
+    def payload = JsonOutput.toJson([
+        jql       : jql,
+        maxResults: maxResults,
+        fields    : fields
+    ])
+
+    def payloadFile = '.jira_search.json'
+    writeFile file: payloadFile, text: payload
+
+    def response = sh(
+        script: '''curl -s -X POST \
+            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d @''' + payloadFile + ''' \
+            "''' + baseUrl + '''/rest/api/3/search/jql"''',
+        returnStdout: true
+    ).trim()
+
+    sh 'rm -f ' + payloadFile
+    echo "  [DEBUG] jiraSearch response: ${response}"
+
+    return new JsonSlurper().parseText(response)
 }
 
 def createBug(String baseUrl, String projectKey, String summary, String description, String dedupLabel = null) {
