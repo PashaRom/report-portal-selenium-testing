@@ -2,9 +2,10 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 /**
- * JIRA_CLOUD_AUTH формат: "email@company.com:api_token"
- * В Jenkins credentials используйте тип "Secret text"
- * и передавайте значение как одну строку "email:api_token".
+ * JIRA_CLOUD_AUTH format: "email@company.com:api_token"
+ * In Jenkins credentials, use the "Secret text" type
+ * and pass the value as a single string: "email:api_token".
+ * If you store only the token, set env.JIRA_CLOUD_EMAIL in Jenkins.
  */
 
 def findOpenBugBySummary(String baseUrl, String projectKey, String summary, String dedupLabel = null) {
@@ -59,6 +60,8 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary, Stri
 }
 
 private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) {
+    def jiraAuth = resolveJiraAuth()
+
     def payload = JsonOutput.toJson([
         jql       : jql,
         maxResults: maxResults,
@@ -69,8 +72,9 @@ private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) 
     writeFile file: payloadFile, text: payload
 
     def response = sh(
-        script: '''curl -s -X POST \
-            -u "$JIRA_CLOUD_AUTH" \
+        script: '''set +x
+            curl -s -X POST \
+            -u "''' + jiraAuth + '''" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
@@ -86,6 +90,8 @@ private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) 
 }
 
 def createBug(String baseUrl, String projectKey, String summary, String description, String dedupLabel = null) {
+    def jiraAuth = resolveJiraAuth()
+
     def labels = ['auto-created-failure']
     if (dedupLabel) {
         labels << dedupLabel
@@ -116,8 +122,9 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
     sh "cat ${payloadFile}"
 
     def response = sh(
-        script: '''curl -s -X POST \
-            -u "$JIRA_CLOUD_AUTH" \
+        script: '''set +x
+            curl -s -X POST \
+            -u "''' + jiraAuth + '''" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
              -d @''' + payloadFile + ''' \
@@ -137,9 +144,12 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 }
 
 def getIssueId(String baseUrl, String issueKey) {
+    def jiraAuth = resolveJiraAuth()
+
     def response = sh(
-        script: '''curl -s -X GET \
-            -u "$JIRA_CLOUD_AUTH" \
+        script: '''set +x
+            curl -s -X GET \
+            -u "''' + jiraAuth + '''" \
             -H "Accept: application/json" \
             "''' + baseUrl + '''/rest/api/3/issue/''' + issueKey + '''?fields=id"''',
         returnStdout: true
@@ -171,6 +181,8 @@ private def toSerializable(Object value) {
 }
 
 def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
+    def jiraAuth = resolveJiraAuth()
+
     def payload = JsonOutput.toJson([
         type        : [name: 'relates to'],
         inwardIssue : [key: bugKey],
@@ -181,8 +193,9 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
     writeFile file: payloadFile, text: payload
 
     def response = sh(
-        script: '''curl -s -X POST \
-            -u "$JIRA_CLOUD_AUTH" \
+        script: '''set +x
+            curl -s -X POST \
+            -u "''' + jiraAuth + '''" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
              -d @''' + payloadFile + ''' \
@@ -194,4 +207,22 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
     if (response) {
         echo "  [DEBUG] linkIssues response: ${response}"
     }
+}
+
+private def resolveJiraAuth() {
+    def rawAuth = (env.JIRA_CLOUD_AUTH ?: '').trim()
+    if (!rawAuth) {
+        error('JIRA_CLOUD_AUTH is empty. Configure jiraTokenId credential.')
+    }
+
+    if (rawAuth.contains(':')) {
+        return rawAuth
+    }
+
+    def jiraEmail = (env.JIRA_CLOUD_EMAIL ?: '').trim()
+    if (!jiraEmail) {
+        error('JIRA_CLOUD_EMAIL is empty. Set Jenkins env var when JIRA_CLOUD_AUTH contains token only.')
+    }
+
+    return jiraEmail + ':' + rawAuth
 }
