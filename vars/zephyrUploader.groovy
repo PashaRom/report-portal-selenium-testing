@@ -2,6 +2,8 @@
  * Entry point from Jenkinsfile
  */
 
+import java.security.MessageDigest
+
 def call(Map config = [:]) {
 
     // ── Validation of required parameters ──────────────────────────────────
@@ -73,11 +75,13 @@ def call(Map config = [:]) {
 private def processFailedTest(Map test, Map config, boolean dryRun) {
     def summary     = '[AUTO] Test Failed: ' + test.className + '.' + test.testName
     def description = buildDescription(test)
+    def dedupLabel  = buildBugDedupLabel(test)
 
     echo "  🔍 Checking for duplicate bug for: ${test.testName}"
+    echo "  [DEBUG] Dedup label: ${dedupLabel}"
 
     String existingBugKey = dryRun ? null
-        : jiraClient.findOpenBugBySummary(config.jiraBaseUrl, config.projectKey, summary)
+        : jiraClient.findOpenBugBySummary(config.jiraBaseUrl, config.projectKey, summary, dedupLabel)
 
     String bugKey
     if (existingBugKey) {
@@ -85,7 +89,7 @@ private def processFailedTest(Map test, Map config, boolean dryRun) {
         echo "  ♻️  Open bug already exists: ${bugKey} — skipping creation"
     } else {
         if (!dryRun) {
-            bugKey = jiraClient.createBug(config.jiraBaseUrl, config.projectKey, summary, description)
+            bugKey = jiraClient.createBug(config.jiraBaseUrl, config.projectKey, summary, description, dedupLabel)
             if (!bugKey) {
                 echo "  ❌ Failed to create bug, skipping linking"
                 return
@@ -123,4 +127,12 @@ private def buildDescription(Map test) {
            "Stack Trace: ${test.stackTrace ?: 'N/A'}. " +
            "Build: ${env.BUILD_URL ?: 'N/A'}. " +
            "Job: ${env.JOB_NAME ?: 'N/A'} #${env.BUILD_NUMBER ?: 'N/A'}."
+}
+
+private def buildBugDedupLabel(Map test) {
+    def fingerprint = (test.className ?: 'unknown') + '.' + (test.testName ?: 'unknown')
+    MessageDigest md = MessageDigest.getInstance('MD5')
+    byte[] digest = md.digest(fingerprint.getBytes('UTF-8'))
+    def hash = digest.encodeHex().toString()
+    return 'auto-fail-' + hash.substring(0, 12)
 }

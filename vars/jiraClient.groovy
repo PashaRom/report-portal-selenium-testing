@@ -6,16 +6,22 @@ import groovy.json.JsonSlurper
  * В Jenkins credentials: Secret text = "pasharomash@gmail.com:ATATxxx..."
  */
 
-def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
+def findOpenBugBySummary(String baseUrl, String projectKey, String summary, String dedupLabel = null) {
     def escapedSummary = summary.replace('"', '\\"')
+    def escapedLabel = dedupLabel?.replace('"', '\\"')
     def jql = 'project = "' + projectKey + '" ' +
-              'AND issuetype = Bug ' +
-              'AND summary = "' + escapedSummary + '"'
+              'AND issuetype = Bug '
+
+    if (escapedLabel) {
+        jql += 'AND (labels = "' + escapedLabel + '" OR summary = "' + escapedSummary + '")'
+    } else {
+        jql += 'AND summary = "' + escapedSummary + '"'
+    }
 
     def payload = JsonOutput.toJson([
         jql       : jql,
         maxResults: 50,
-        fields    : ['summary', 'status', 'id']
+        fields    : ['summary', 'status', 'id', 'labels']
     ])
 
     def payloadFile = '.jira_search.json'
@@ -55,7 +61,12 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
     return null
 }
 
-def createBug(String baseUrl, String projectKey, String summary, String description) {
+def createBug(String baseUrl, String projectKey, String summary, String description, String dedupLabel = null) {
+    def labels = ['auto-created-failure']
+    if (dedupLabel) {
+        labels << dedupLabel
+    }
+
     def payload = JsonOutput.toJson([
         fields: [
             project    : [key: projectKey],
@@ -69,7 +80,8 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
                 ]]
             ],
             issuetype  : [name: 'Bug'],
-            priority   : [name: 'High']
+            priority   : [name: 'High'],
+            labels     : labels
         ]
     ])
 
