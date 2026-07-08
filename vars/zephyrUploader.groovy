@@ -16,10 +16,10 @@ def call(Map config = [:]) {
 
     withCredentials([
         string(credentialsId: config.zephyrTokenId, variable: 'ZEPHYR_TOKEN'),
-        string(credentialsId: config.jiraTokenId,   variable: 'JIRA_CLOUD_TOKEN')
+        usernameColonPassword(credentialsId: config.jiraTokenId, variable: 'JIRA_CLOUD_AUTH')
     ]) {
         def zephyrToken = env.ZEPHYR_TOKEN
-        def jiraToken   = env.JIRA_CLOUD_TOKEN
+        def jiraAuth    = env.JIRA_CLOUD_AUTH
 
         // ── 1. Find all junit.xml files using sh find ───────────────────────────
         // resultsPattern is the search directory, for example:

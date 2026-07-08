@@ -2,8 +2,9 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 /**
- * JIRA_CLOUD_TOKEN формат: "email@company.com:your_api_token"
- * В Jenkins credentials: Secret text = "pasharomash@gmail.com:ATATxxx..."
+ * JIRA_CLOUD_AUTH формат: "email@company.com:api_token"
+ * В Jenkins credentials используйте тип "Username with password"
+ * и передавайте через usernameColonPassword в переменную JIRA_CLOUD_AUTH.
  */
 
 def findOpenBugBySummary(String baseUrl, String projectKey, String summary, String dedupLabel = null) {
@@ -69,7 +70,7 @@ private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) 
 
     def response = sh(
         script: '''curl -s -X POST \
-            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
+            -u "$JIRA_CLOUD_AUTH" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
@@ -116,7 +117,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 
     def response = sh(
         script: '''curl -s -X POST \
-            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
+            -u "$JIRA_CLOUD_AUTH" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
              -d @''' + payloadFile + ''' \
@@ -138,7 +139,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 def getIssueId(String baseUrl, String issueKey) {
     def response = sh(
         script: '''curl -s -X GET \
-            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
+            -u "$JIRA_CLOUD_AUTH" \
             -H "Accept: application/json" \
             "''' + baseUrl + '''/rest/api/3/issue/''' + issueKey + '''?fields=id"''',
         returnStdout: true
@@ -181,7 +182,7 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
 
     def response = sh(
         script: '''curl -s -X POST \
-            -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
+            -u "$JIRA_CLOUD_AUTH" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
              -d @''' + payloadFile + ''' \
