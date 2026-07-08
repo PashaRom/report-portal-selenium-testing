@@ -2,9 +2,8 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 /**
- * ВАЖНО: Jira Cloud требует Basic Auth: email:api_token в base64
- * JIRA_CLOUD_TOKEN должен быть в формате: email@company.com:your_api_token
- * В Jenkins credentials: тип "Secret text", значение "email:token"
+ * JIRA_CLOUD_TOKEN формат: "email@company.com:your_api_token"
+ * В Jenkins credentials: Secret text = "pasharomash@gmail.com:ATATxxx..."
  */
 
 def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
@@ -16,21 +15,30 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
               'AND status != Resolved ' +
               'AND summary ~ "' + escapedSummary + '"'
 
-    def encoded  = URLEncoder.encode(jql, 'UTF-8')
-    def url      = baseUrl + '/rest/api/3/search?jql=' + encoded + '&maxResults=1&fields=summary,status,id'
+    def payload = JsonOutput.toJson([
+        jql       : jql,
+        maxResults: 1,
+        fields    : ['summary', 'status', 'id']
+    ])
+
+    def payloadFile = '.jira_search.json'
+    writeFile file: payloadFile, text: payload
 
     def response = sh(
-        script: '''curl -s -X GET \
-            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
+        script: '''curl -s -X POST \
+            -u "${JIRA_CLOUD_TOKEN}" \
+            -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            "''' + url + '''"''',
+            -d @''' + payloadFile + ''' \
+            "''' + baseUrl + '''/rest/api/3/search/jql"''',
         returnStdout: true
     ).trim()
 
+    sh 'rm -f ' + payloadFile
     echo "  [DEBUG] findOpenBug response: ${response}"
 
     def json = new JsonSlurper().parseText(response)
-    if (json.total > 0) {
+    if (json.issues && json.issues.size() > 0) {
         return json.issues[0].key as String
     }
     return null
@@ -59,7 +67,8 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 
     def response = sh(
         script: '''curl -s -X POST \
-            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
+            -u "${JIRA_CLOUD_TOKEN}" \
+            -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
             "''' + baseUrl + '''/rest/api/3/issue"''',
@@ -67,16 +76,12 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
     ).trim()
 
     sh 'rm -f ' + payloadFile
-
     echo "  [DEBUG] createBug response: ${response}"
 
     def json = new JsonSlurper().parseText(response)
-
-    // Jira возвращает { "id": "10001", "key": "KAN-5", "self": "..." }
     if (json.key) {
         return json.key as String
     }
-    // Если ошибка — логируем и возвращаем null
     echo "  ❌ createBug failed: ${response}"
     return null
 }
@@ -84,8 +89,8 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
 def getIssueId(String baseUrl, String issueKey) {
     def response = sh(
         script: '''curl -s -X GET \
-            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
-            -H "Content-Type: application/json" \
+            -u "${JIRA_CLOUD_TOKEN}" \
+            -H "Accept: application/json" \
             "''' + baseUrl + '''/rest/api/3/issue/''' + issueKey + '''?fields=id"''',
         returnStdout: true
     ).trim()
@@ -106,7 +111,8 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
 
     def response = sh(
         script: '''curl -s -X POST \
-            -H "Authorization: Basic $(echo -n "${JIRA_CLOUD_TOKEN}" | base64)" \
+            -u "${JIRA_CLOUD_TOKEN}" \
+            -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
             "''' + baseUrl + '''/rest/api/3/issueLink"''',
@@ -114,7 +120,6 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
     ).trim()
 
     sh 'rm -f ' + payloadFile
-
     if (response) {
         echo "  [DEBUG] linkIssues response: ${response}"
     }
