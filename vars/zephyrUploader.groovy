@@ -106,8 +106,8 @@ private def processFailedTest(Map test, Map config, boolean dryRun) {
             // Получаем числовой ID бага для Zephyr
             String bugId = jiraClient.getIssueId(config.jiraBaseUrl, bugKey)
             zephyrClient.linkIssueToTestCase(tcKey, bugId)
-            // Jira issue link (двусторонняя связь)
-            jiraClient.linkIssues(config.jiraBaseUrl, bugKey, tcKey)
+            // tcKey is Zephyr test case key, not guaranteed to be a Jira issue key.
+            // Keep linking in Zephyr only to avoid Jira 400 errors.
         }
     } else {
         echo "  ⚠️  Test case '${test.testName}' not found in Zephyr"

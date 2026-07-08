@@ -10,7 +10,7 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
     def escapedSummary = summary.replace('"', '\\"')
     def jql = 'project = "' + projectKey + '" ' +
               'AND issuetype = Bug ' +
-              'AND summary ~ "' + escapedSummary + '"'
+              'AND summary = "' + escapedSummary + '"'
 
     def payload = JsonOutput.toJson([
         jql       : jql,
@@ -20,6 +20,7 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
 
     def payloadFile = '.jira_search.json'
     writeFile file: payloadFile, text: payload
+    echo "  [DEBUG] findOpenBug JQL: ${jql}"
 
     def response = sh(
         script: '''curl -s -X POST \
@@ -40,7 +41,8 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
         // Create a new bug only when all duplicates are in Done status.
         def activeIssue = json.issues.find { issue ->
             def statusName = issue?.fields?.status?.name
-            !(statusName?.equalsIgnoreCase('Done'))
+            def statusCategoryKey = issue?.fields?.status?.statusCategory?.key
+            !(statusCategoryKey?.equalsIgnoreCase('done') || statusName?.equalsIgnoreCase('Done'))
         }
 
         if (activeIssue) {
