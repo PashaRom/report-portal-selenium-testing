@@ -71,7 +71,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
             -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            -d @${payloadFile} \
+             -d @''' + payloadFile + ''' \
             "''' + baseUrl + '''/rest/api/3/issue"''',
         returnStdout: true
     ).trim()
@@ -115,7 +115,7 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
             -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            -d @${payloadFile} \
+             -d @''' + payloadFile + ''' \
             "''' + baseUrl + '''/rest/api/3/issueLink"''',
         returnStdout: true
     ).trim()
