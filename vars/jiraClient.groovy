@@ -29,10 +29,11 @@ def findOpenBugBySummary(String baseUrl, String projectKey, String summary) {
             -u "pasharomash@gmail.com:$JIRA_CLOUD_TOKEN" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            -d @${payloadFile} \
-            "''' + baseUrl + '''/rest/api/3/search/jql"''',
+            -d @''' + payloadFile + ''' \
+            "''' + baseUrl + '''/rest/api/3/search"''',
         returnStdout: true
     ).trim()
+
 
     sh 'rm -f ' + payloadFile
     echo "  [DEBUG] findOpenBug response: ${response}"
