@@ -111,7 +111,7 @@ def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
 
     def response = sh(
         script: '''curl -s -X POST \
-            -u "${JIRA_CLOUD_TOKEN}" \
+            -u "pasharomash@gmail.com:${JIRA_CLOUD_TOKEN}" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -d @''' + payloadFile + ''' \
