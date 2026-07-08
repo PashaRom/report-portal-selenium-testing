@@ -2,8 +2,6 @@
  * Entry point from Jenkinsfile
  */
 
-import java.security.MessageDigest
-
 def call(Map config = [:]) {
 
     // ── Validation of required parameters ──────────────────────────────────
@@ -131,8 +129,18 @@ private def buildDescription(Map test) {
 
 private def buildBugDedupLabel(Map test) {
     def fingerprint = (test.className ?: 'unknown') + '.' + (test.testName ?: 'unknown')
-    MessageDigest md = MessageDigest.getInstance('MD5')
-    byte[] digest = md.digest(fingerprint.getBytes('UTF-8'))
-    def hash = digest.encodeHex().toString()
-    return 'auto-fail-' + hash.substring(0, 12)
+    def normalized = fingerprint
+        .toLowerCase()
+        .replaceAll('[^a-z0-9]+', '-')
+        .replaceAll('^-+|-+$', '')
+
+    if (!normalized) {
+        normalized = 'unknown'
+    }
+
+    if (normalized.length() > 240) {
+        normalized = normalized.substring(0, 240)
+    }
+
+    return 'auto-fail-' + normalized
 }
