@@ -1,5 +1,5 @@
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 /**
  * JIRA_CLOUD_TOKEN формат: "email@company.com:your_api_token"
@@ -80,7 +80,7 @@ private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) 
     sh 'rm -f ' + payloadFile
     echo "  [DEBUG] jiraSearch response: ${response}"
 
-    return new JsonSlurper().parseText(response)
+    return new JsonSlurperClassic().parseText(response)
 }
 
 def createBug(String baseUrl, String projectKey, String summary, String description, String dedupLabel = null) {
@@ -126,7 +126,7 @@ def createBug(String baseUrl, String projectKey, String summary, String descript
     sh 'rm -f ' + payloadFile
     echo "  [DEBUG] createBug response: ${response}"
 
-    def json = new JsonSlurper().parseText(response)
+    def json = new JsonSlurperClassic().parseText(response)
     if (json.key) {
         return json.key as String
     }
@@ -143,7 +143,7 @@ def getIssueId(String baseUrl, String issueKey) {
         returnStdout: true
     ).trim()
 
-    def json = new JsonSlurper().parseText(response)
+    def json = new JsonSlurperClassic().parseText(response)
     return json.id as String
 }
 
