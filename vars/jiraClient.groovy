@@ -1,0 +1,228 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+/**
+ * JIRA_CLOUD_AUTH format: "email@company.com:api_token"
+ * In Jenkins credentials, use the "Secret text" type
+ * and pass the value as a single string: "email:api_token".
+ * If you store only the token, set env.JIRA_CLOUD_EMAIL in Jenkins.
+ */
+
+def findOpenBugBySummary(String baseUrl, String projectKey, String summary, String dedupLabel = null) {
+    def escapedSummary = summary.replace('"', '\\"')
+    def escapedLabel = dedupLabel?.replace('"', '\\"')
+    def jql = 'project = "' + projectKey + '" ' +
+              'AND issuetype = Bug '
+
+    if (escapedLabel) {
+        jql += 'AND (labels = "' + escapedLabel + '" OR summary = "' + escapedSummary + '")'
+    } else {
+        jql += 'AND summary = "' + escapedSummary + '"'
+    }
+
+    echo "  [DEBUG] findOpenBug JQL: ${jql}"
+    def json = jiraSearch(baseUrl, jql, ['summary', 'status', 'id', 'labels'], 50)
+
+    List matchedIssues = (json?.issues ?: []) as List
+
+    // Fallback path: some Jira Cloud setups may return empty for strict label/summary JQL.
+    // In that case, fetch recent bugs and filter in code.
+    if (!matchedIssues) {
+        def fallbackJql = 'project = "' + projectKey + '" AND issuetype = Bug ORDER BY created DESC'
+        echo "  [DEBUG] findOpenBug fallback JQL: ${fallbackJql}"
+        def fallbackJson = jiraSearch(baseUrl, fallbackJql, ['summary', 'status', 'id', 'labels'], 100)
+        matchedIssues = ((fallbackJson?.issues ?: []) as List).findAll { issue ->
+            def issueSummary = issue?.fields?.summary as String
+            def issueLabels = (issue?.fields?.labels ?: []) as List
+            def labelMatches = dedupLabel ? issueLabels.contains(dedupLabel) : false
+            def summaryMatches = issueSummary == summary
+            labelMatches || summaryMatches
+        }
+        echo "  [DEBUG] findOpenBug fallback matched issues: ${matchedIssues.size()}"
+    }
+
+    if (matchedIssues && matchedIssues.size() > 0) {
+        // Create a new bug only when all duplicates are in Done status.
+        def activeIssue = matchedIssues.find { issue ->
+            def statusName = issue?.fields?.status?.name
+            def statusCategoryKey = issue?.fields?.status?.statusCategory?.key
+            !(statusCategoryKey?.equalsIgnoreCase('done') || statusName?.equalsIgnoreCase('Done'))
+        }
+
+        if (activeIssue) {
+            echo "  [DEBUG] Duplicate bug found in status '${activeIssue.fields.status.name}': ${activeIssue.key}"
+            return activeIssue.key as String
+        }
+
+        echo "  [DEBUG] Matching bugs found only in Done status; new bug creation is allowed"
+    }
+    return null
+}
+
+private def jiraSearch(String baseUrl, String jql, List fields, int maxResults) {
+    def jiraAuth = resolveJiraAuth()
+
+    def payload = JsonOutput.toJson([
+        jql       : jql,
+        maxResults: maxResults,
+        fields    : fields
+    ])
+
+    def payloadFile = '.jira_search.json'
+    writeFile file: payloadFile, text: payload
+
+    def response = sh(
+        script: '''set +x
+            curl -s -X POST \
+            -u "''' + jiraAuth + '''" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d @''' + payloadFile + ''' \
+            "''' + baseUrl + '''/rest/api/3/search/jql"''',
+        returnStdout: true
+    ).trim()
+
+    sh 'rm -f ' + payloadFile
+    echo "  [DEBUG] jiraSearch response: ${response}"
+
+    def parsed = new JsonSlurper().parseText(response)
+    return toSerializable(parsed)
+}
+
+def createBug(String baseUrl, String projectKey, String summary, String description, String dedupLabel = null) {
+    def jiraAuth = resolveJiraAuth()
+
+    def labels = ['auto-created-failure']
+    if (dedupLabel) {
+        labels << dedupLabel
+    }
+
+    def payload = JsonOutput.toJson([
+        fields: [
+            project    : [key: projectKey],
+            summary    : summary,
+            description: [
+                type   : 'doc',
+                version: 1,
+                content: [[
+                    type   : 'paragraph',
+                    content: [[type: 'text', text: description]]
+                ]]
+            ],
+            issuetype  : [name: 'Bug'],
+            priority   : [name: 'High'],
+            labels     : labels
+        ]
+    ])
+
+    def payloadFile = '.jira_create_bug.json'
+    writeFile file: payloadFile, text: payload
+
+    echo "  [DEBUG] createBug payload: ${payload}"
+    sh "cat ${payloadFile}"
+
+    def response = sh(
+        script: '''set +x
+            curl -s -X POST \
+            -u "''' + jiraAuth + '''" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+             -d @''' + payloadFile + ''' \
+            "''' + baseUrl + '''/rest/api/3/issue"''',
+        returnStdout: true
+    ).trim()
+
+    sh 'rm -f ' + payloadFile
+    echo "  [DEBUG] createBug response: ${response}"
+
+    def json = toSerializable(new JsonSlurper().parseText(response))
+    if (json.key) {
+        return json.key as String
+    }
+    echo "  ❌ createBug failed: ${response}"
+    return null
+}
+
+def getIssueId(String baseUrl, String issueKey) {
+    def jiraAuth = resolveJiraAuth()
+
+    def response = sh(
+        script: '''set +x
+            curl -s -X GET \
+            -u "''' + jiraAuth + '''" \
+            -H "Accept: application/json" \
+            "''' + baseUrl + '''/rest/api/3/issue/''' + issueKey + '''?fields=id"''',
+        returnStdout: true
+    ).trim()
+
+    def json = toSerializable(new JsonSlurper().parseText(response))
+    return json.id as String
+}
+
+private def toSerializable(Object value) {
+    if (value == null || value instanceof String || value instanceof Number || value instanceof Boolean) {
+        return value
+    }
+
+    if (value instanceof Map) {
+        def map = [:]
+        value.each { k, v ->
+            map[k] = toSerializable(v)
+        }
+        return map
+    }
+
+    if (value instanceof List) {
+        return value.collect { item -> toSerializable(item) }
+    }
+
+    // Fallback for unknown JSON node types used by parser internals.
+    return value.toString()
+}
+
+def linkIssues(String baseUrl, String bugKey, String testCaseKey) {
+    def jiraAuth = resolveJiraAuth()
+
+    def payload = JsonOutput.toJson([
+        type        : [name: 'relates to'],
+        inwardIssue : [key: bugKey],
+        outwardIssue: [key: testCaseKey]
+    ])
+
+    def payloadFile = '.jira_link.json'
+    writeFile file: payloadFile, text: payload
+
+    def response = sh(
+        script: '''set +x
+            curl -s -X POST \
+            -u "''' + jiraAuth + '''" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+             -d @''' + payloadFile + ''' \
+            "''' + baseUrl + '''/rest/api/3/issueLink"''',
+        returnStdout: true
+    ).trim()
+
+    sh 'rm -f ' + payloadFile
+    if (response) {
+        echo "  [DEBUG] linkIssues response: ${response}"
+    }
+}
+
+private def resolveJiraAuth() {
+    def rawAuth = (env.JIRA_CLOUD_AUTH ?: '').trim()
+    if (!rawAuth) {
+        error('JIRA_CLOUD_AUTH is empty. Configure jiraTokenId credential.')
+    }
+
+    if (rawAuth.contains(':')) {
+        return rawAuth
+    }
+
+    def jiraEmail = (env.JIRA_CLOUD_EMAIL ?: '').trim()
+    if (!jiraEmail) {
+        error('JIRA_CLOUD_EMAIL is empty. Set Jenkins env var when JIRA_CLOUD_AUTH contains token only.')
+    }
+
+    return jiraEmail + ':' + rawAuth
+}

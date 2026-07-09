@@ -1,5 +1,5 @@
 library(
-    identifier: 'jenkins-shared-library@main',
+    identifier: 'jenkins-shared-library@branch-2',
     retriever: modernSCM([
         $class: 'GitSCMSource',
         remote: 'https://github.com/PashaRom/report-portal-selenium-testing.git'
@@ -37,7 +37,7 @@ pipeline {
 
         string(
             name: 'TEST_FILTER',
-            defaultValue: 'FullyQualifiedName~Cancel_ClosesDialog',
+            defaultValue: 'FullyQualifiedName~KAN_T2_ResizeWidget_ResizeWidgetAndCheckSize',
             description: '''Category=dashboard_crud
                             - Using [Category] attribute
 
@@ -68,7 +68,7 @@ pipeline {
 
         string(
             name: 'GIT_BRANCH',
-            defaultValue: 'main',
+            defaultValue: 'branch-2',
             description: 'Git branch to build'
         )
     }
@@ -175,6 +175,7 @@ pipeline {
                                             ReportPortal__Launch__Name="RP UI NUnit - ${b}" \\
                                             REPORTPORTAL_SERVER_APIKEY=\$RP_KEY \\
                                             dotnet test --no-build \\
+                                                --logger:"junit;LogFilePath=${env.TEST_RESULTS_DIR}/${b}/junit.xml" \\
                                                 --results-directory ${env.TEST_RESULTS_DIR}/${b} \\
                                                 --filter "${params.TEST_FILTER}" \\
                                                 -- NUnit.NumberOfTestWorkers=${params.THREADS}
@@ -203,6 +204,38 @@ pipeline {
                 }
             }
         }
+
+        
+        stage('Upload Results To Zephyr') {
+            steps {
+                withCredentials([string(credentialsId: 'ZEPHYR_TOKEN', variable: 'ZEPHYR_TOKEN')]) {
+                    sh '''
+                    find SeleniumFrameworkInteraction/UITests/test-results/** \
+                        -name "junit.xml" \
+                        -exec curl \
+                            -X POST \
+                            -H "Authorization: Bearer $ZEPHYR_TOKEN" \
+                            -F "file=@{}" \
+                            https://api.zephyrscale.smartbear.com/v2/automations/executions/junit?projectKey=KAN \
+                        \\;
+                    '''
+                }
+            }
+        }
+
+         stage('Upload Results & Create Bugs') {
+             steps {
+                 zephyrUploader(
+                     resultsPattern : 'SeleniumFrameworkInteraction/UITests/test-results',
+                     projectKey     : 'KAN',
+                     jiraBaseUrl    : 'https://pasharomash.atlassian.net',
+                     jiraTokenId    : 'JIRA_CLOUD_TOKEN',
+                     zephyrTokenId  : 'ZEPHYR_TOKEN',
+                     createBugs     : true,
+                     dryRun         : false
+                 )
+             }
+         }
 
     }
     post {
